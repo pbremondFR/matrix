@@ -28,6 +28,10 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 	pub fn from(array: [K; N]) -> Self {
 		Vector::<N, K> { data: array }
 	}
+
+	pub fn from_slice(src: &[K]) -> Self {
+		Self { data: src.try_into().expect("Bad slice length") }
+	}
 }
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
@@ -38,14 +42,14 @@ impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	}
 }
 
-impl<const N: usize> ops::IndexMut<usize> for Vector<N> {
+impl<const N: usize, K: Mathable> ops::IndexMut<usize> for Vector<N, K> {
 	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
 		&mut self.data[index]
 	}
 }
 
-impl<const N: usize> PartialEq for Vector<N> {
-	fn eq(&self, rhs: &Vector<N>) -> bool {
+impl<const N: usize, K: Mathable> PartialEq for Vector<N, K> {
+	fn eq(&self, rhs: &Self) -> bool {
 		for i in 0..N {
 			if self.data[i] != rhs.data[i] {
 				return false;
@@ -64,6 +68,15 @@ impl<const N: usize> ops::Add<Vector<N>> for Vector<N> {
 			res.data[i] = self.data[i] + rhs.data[i];
 		}
 		res
+	}
+}
+
+impl<const N: usize, K: Mathable> ops::Neg for Vector<N, K> {
+	type Output = Self;
+
+	fn neg(self) -> Self::Output {
+		let inverted: Vec<K> = self.data.iter().map(|&x| -x).collect();
+		Self::from_slice(&inverted)
 	}
 }
 

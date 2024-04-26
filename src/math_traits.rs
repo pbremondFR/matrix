@@ -1,4 +1,6 @@
-pub trait Mathable: Copy {
+use num_traits::*;
+
+pub trait Mathable: Copy + Signed {
 	fn from(x: f32) -> Self;
 }
 
