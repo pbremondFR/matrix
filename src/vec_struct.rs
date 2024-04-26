@@ -1,20 +1,22 @@
 use std::{fmt, ops};
 
+use crate::math_traits::Mathable;
+
 #[derive(Debug, Clone, Copy)]
-pub struct Vector<const N: usize, K: Copy = f32> {
+pub struct Vector<const N: usize, K: Mathable = f32> {
 	data: [K; N],
 }
 
 pub type Vec2 = Vector<2>;
 pub type Vec3 = Vector<3>;
 
-impl<const N: usize, K: Copy> Default for Vector<N, K> {
+impl<const N: usize, K: Mathable> Default for Vector<N, K> {
 	fn default() -> Vector<N, K> {
-		Vector::<N, K> { data: [0. as K; N] }
+		Vector::<N, K> { data: [K::from(0.); N] }
 	}
 }
 
-impl<const N: usize, K: Copy> Vector<N, K> {
+impl<const N: usize, K: Mathable> Vector<N, K> {
 	pub fn new() -> Self {
 		Vector::<N, K> { ..Default::default() }
 	}
@@ -26,8 +28,8 @@ impl<const N: usize, K: Copy> Vector<N, K> {
 	}
 }
 
-impl<const N: usize> ops::Index<usize> for Vector<N> {
-	type Output = f32;
+impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
+	type Output = K;
 
 	fn index(&self, index: usize) -> &Self::Output {
 		&self.data[index]

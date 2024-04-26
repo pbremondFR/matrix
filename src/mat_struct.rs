@@ -1,4 +1,4 @@
-use crate::Vector;
+use crate::{math_traits::Mathable, Vector};
 use std::{fmt, ops};
 
 #[derive(Debug)]
@@ -10,7 +10,7 @@ use std::{fmt, ops};
  *  |3;1  3;2  3;3
  *  ▼
  */
-pub struct Matrix<const M: usize, const N: usize, K: Copy = f32> {
+pub struct Matrix<const M: usize, const N: usize, K: Mathable = f32> {
 	data: [Vector::<N, K>; M],
 }
 
@@ -18,50 +18,48 @@ pub type Mat2 = Matrix<2, 2>;
 pub type Mat3 = Matrix<3, 3>;
 
 macro_rules! matrix_impl {
-    ($($body:tt)*) => {
-        impl<const N: usize, const M: usize, K: Copy> $($body)*
-    };
+	($($body:tt)*) => {
+		impl<const M: usize, const N: usize, K: Mathable> $($body)*
+	};
 }
 
-// idk if I really want to use this trick. Looks like I'm too C++ minded?
-matrix_impl!( Default for Matrix<N, M, K> {
-    fn default() -> Self {
-        Self { data: [Vector::<N, K>::new(); M] }
-    }
+// idk if I really want to use this trick. Looks like I'm too C++ minded? GIVE ME BACK #DEFINE
+matrix_impl!( Default for Matrix<M, N, K> {
+	fn default() -> Self {
+		Self { data: [Vector::<N, K>::new(); M] }
+	}
 });
 
+impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
+	// Doesn't work, the fuck?
+	// type VecType = Vector::<N, K>;
 
-impl<const N: usize, const M: usize, K: Copy> Matrix<N, M, K> {
 	pub fn new() -> Self {
 		Self { ..Default::default() }
 	}
 
-	pub fn from(array: [[f32; N]; M]) -> Self {
+	pub fn from(array: [[K; N]; M]) -> Self {
 		let mut ret = Self::new();
-		array.iter().enumerate().map(|(i, x)| ret[i] = x);
-		// One of these is more idiomatic, I guess. The other, more readable, I think.
-		// Pick your poison.
-
-		// for i in 0..array.len() {
-		// 	ret.data[i] = Vector::<N>::from(array[i]);
-		// }
+		for (idx, &vec) in array.iter().enumerate() {
+			ret.data[idx] = Vector::from(vec);
+		}
 		ret
 	}
 }
 
-// impl<const N: usize, const M: usize, K> ops::Index<usize> for Matrix<N, M, K> {
-// 	type Output = Vector::<K>;
+impl<const M: usize, const N: usize, K: Mathable> ops::Index<usize> for Matrix<M, N, K> {
+	type Output = Vector::<N, K>;
 
-// 	fn index(&self, index: usize) -> &Self::Output {
-// 		&self.data[index]
-// 	}
-// }
+	fn index(&self, index: usize) -> &Self::Output {
+		&self.data[index]
+	}
+}
 
-// impl<const K: usize> ops::IndexMut<usize> for Matrix<K> {
-// 	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-// 		&mut self.data[index]
-// 	}
-// }
+impl<const M: usize, const N: usize, K: Mathable> ops::IndexMut<usize> for Matrix<M, N, K> {
+	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+		&mut self.data[index]
+	}
+}
 
 // impl<const K: usize> PartialEq for Matrix<K> {
 // 	fn eq(&self, rhs: &Matrix<K>) -> bool {
@@ -73,3 +71,18 @@ impl<const N: usize, const M: usize, K: Copy> Matrix<N, M, K> {
 // 		return true;
 // 	}
 // }
+
+// Looks like it also implements the to_string trait?
+impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let mut output = String::new();
+		for i in 0..self.data.len() {
+			let vec_str = self.data[i].to_string();
+			output += &format!("|{}|", &vec_str[1..vec_str.len() - 1]);
+			if i != self.data.len() - 1 {
+				output += "\n";
+			}
+		}
+		write!(f, "{}", output)
+	}
+}

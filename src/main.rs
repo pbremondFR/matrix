@@ -1,21 +1,24 @@
+mod math_traits;
 mod mat_struct;
 mod vec_struct;
 
 use vec_struct::*;
 use mat_struct::*;
 
+// use crate::math_traits::Mathable;
+
 fn main() {
 	println!("Hello, world!");
 
 	{
 		let mut foo = Vector::<3>::new();
-		let mut bar = Matrix::<3>::new();
+		let mut bar = Matrix::<3, 3>::new();
 
 		foo[1] = 1.;
 		bar[0][0] = 42.;
 
 		println!("{}", foo);
-		println!("{:?}", bar);
+		println!("{}", bar);
 	}
 	{
 		let foo = Vec3::from([0., 1., 2.]);
