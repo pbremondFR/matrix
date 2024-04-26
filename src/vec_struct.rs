@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::{fmt, ops};
 
 use crate::math_traits::Mathable;

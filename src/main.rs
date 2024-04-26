@@ -24,18 +24,11 @@ fn main() {
 		let foo = Vec3::from([0., 1., 2.]);
 		let bar = Mat3::from([
 			[1., 0., 0.],
-			[0., 1., 0.],
-			[0., 0., 1.],
+			[0., 2., 0.],
+			[0., 0., 3.],
 		]);
 
-		println!("{:?}", foo);
-		println!("{:?}", bar);
-	}
-	{
-		let a = Vec2::from( [1., 1.] );
-		let b = Vec2::from( [1., -1.] );
-		let res = a + b;
-
-		println!("{:?}", res);
+		println!("{}", foo);
+		println!("{}", bar);
 	}
 }
