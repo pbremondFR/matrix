@@ -60,7 +60,7 @@ impl<const N: usize, K: Mathable> PartialEq for Vector<N, K> {
 	}
 }
 
-impl<const N: usize> ops::Add<Vector<N>> for Vector<N> {
+impl<const N: usize, K: Mathable> ops::Add<Vector<N, K>> for Vector<N, K> {
 	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self {

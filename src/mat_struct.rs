@@ -3,7 +3,7 @@
 use crate::{math_traits::Mathable, Vector};
 use std::{fmt, ops};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /* M lines, N columns
  *    n
  *  ┌─────────────►
@@ -63,16 +63,78 @@ impl<const M: usize, const N: usize, K: Mathable> ops::IndexMut<usize> for Matri
 	}
 }
 
-// impl<const K: usize> PartialEq for Matrix<K> {
-// 	fn eq(&self, rhs: &Matrix<K>) -> bool {
-// 		for i in 0..K {
-// 			if self.data[i] != rhs[i] {
-// 				return false;
-// 			}
-// 		}
-// 		return true;
-// 	}
-// }
+impl<const M: usize, const N: usize, K: Mathable> PartialEq for Matrix<M, N, K> {
+	fn eq(&self, rhs: &Self) -> bool {
+		for (i, &x) in rhs.data.iter().enumerate() {
+			if self[i] != x {
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+impl<const M: usize, const N: usize, K: Mathable>
+ops::Add<Matrix<M, N, K>> for Matrix<M, N, K> {
+	type Output = Self;
+
+	fn add(self, rhs: Self) -> Self {
+		let mut res = Self::new();
+		for i in 0..M {	// Maybe you can do better with iterators or something? don't really care rn
+			res.data[i] = self.data[i] + rhs.data[i];
+		}
+		res
+	}
+}
+
+impl<const M: usize, const N: usize, K: Mathable>
+ops::Sub<Matrix<M, N, K>> for Matrix<M, N, K> {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self {
+		self + -rhs
+	}
+}
+
+impl<const M: usize, const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
+ops::Mul<T> for Matrix<M, N, K> {
+	type Output = Self;
+
+	fn mul(self, rhs: T) -> Self {
+		let mut res = self.clone();
+		for i in 0..M {
+			res[i] = res[i] * rhs;
+		}
+		res
+	}
+}
+
+impl<const M: usize, const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
+ops::Div<T> for Matrix<M, N, K> {
+	type Output = Self;
+
+	fn div(self, rhs: T) -> Self {
+		let mut res = self.clone();
+		for i in 0..M {
+			res[i] = res[i] / rhs;
+		}
+		res
+	}
+}
+
+impl<const M: usize, const N: usize, K: Mathable>
+ops::Neg for Matrix<M, N, K> {
+	type Output = Self;
+
+	fn neg(self) -> Self::Output {
+		let mut res = self.clone();
+		// I tried with iterators and it sucks andf I'm BAD AT RUST FFS
+		for i in 0..M {
+			res[i] = -res[i];
+		}
+		res
+	}
+}
 
 // Looks like it also implements the to_string trait?
 impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
