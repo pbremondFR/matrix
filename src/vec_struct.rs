@@ -12,6 +12,12 @@ pub struct Vector<const N: usize, K: Mathable = f32> {
 pub type Vec2 = Vector<2>;
 pub type Vec3 = Vector<3>;
 
+macro_rules! vector {
+	($($elem:expr),*) => {{
+		Vector::from([$($elem),*])
+	}};
+}
+
 impl<const N: usize, K: Mathable> Default for Vector<N, K> {
 	fn default() -> Vector<N, K> {
 		Vector::<N, K> { data: [K::from(0.); N] }
@@ -50,12 +56,7 @@ impl<const N: usize, K: Mathable> ops::IndexMut<usize> for Vector<N, K> {
 
 impl<const N: usize, K: Mathable> PartialEq for Vector<N, K> {
 	fn eq(&self, rhs: &Self) -> bool {
-		for i in 0..N {
-			if self.data[i] != rhs.data[i] {
-				return false;
-			}
-		}
-		return true;
+		self.data == rhs.data
 	}
 }
 
@@ -69,6 +70,34 @@ impl<const N: usize> ops::Add<Vector<N>> for Vector<N> {
 		}
 		res
 	}
+}
+
+impl<const N: usize> ops::Sub<Vector<N>> for Vector<N> {
+	type Output = Self;
+
+	fn sub(self, rhs: Self) -> Self {
+		self + -rhs
+	}
+}
+
+impl<const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
+ops::Mul<T> for Vector<N, K> {
+	type Output = Self;
+
+	fn mul(self, rhs: T) -> Self {
+		let mul: Vec<K> = self.data.iter().map(|&x| x * rhs.into()).collect();
+		Self::from_slice(&mul)
+	}
+}
+
+impl<const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
+ops::Div<T> for Vector<N, K> {
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+		let res: Vec<K> = self.data.iter().map(|&v| v / rhs.into()).collect();
+        Self::from_slice(&res)
+    }
 }
 
 impl<const N: usize, K: Mathable> ops::Neg for Vector<N, K> {
@@ -101,5 +130,28 @@ mod tests {
 	#[test]
 	fn test_add() {
 		assert!(Vec2::from([1., 1.]) + Vec2::from([-1., -1.]) == Vec2::from([0., 0.]))
+	}
+
+	#[test]
+	fn test_substract() {
+		let test = Vec2::from([42., 42.]);
+		assert!(test - test == Vec2::from([0., 0.]))
+	}
+
+	#[test]
+	fn test_mul() {
+		let foo = vector!(1., 1.);
+		let bar = foo * 2.;
+		assert!(bar == vector!(2., 2.));
+		let bar = bar * 0.;
+		assert!(bar == vector!(0., 0.));
+	}
+
+	#[test]
+	fn test_eq_neq() {
+		let test = Vec2::from([42., 42.]);
+		assert!(test == test);
+		let test2 = -test;
+		assert!(test != test2);
 	}
 }
