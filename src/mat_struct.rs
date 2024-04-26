@@ -3,7 +3,7 @@
 use crate::{math_traits::Mathable, Vector};
 use std::{fmt, ops};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 /* M lines, N columns
  *    n
  *  ┌─────────────►
@@ -148,5 +148,65 @@ impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
 			}
 		}
 		write!(f, "{}", output)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_add() {
+		let foo = Matrix::<2, 2>::from([
+			[1., 2.],
+			[3., 4.],
+		]);
+		let bar = Matrix::<2, 2>::from([
+			[7., 4.],
+			[-2., 2.],
+		]);
+		let expected = Matrix::<2, 2>::from([
+			[8., 6.],
+			[1., 6.],
+		]);
+		assert!(foo + bar == expected);
+	}
+
+	#[test]
+	fn test_substract() {
+		let foo = Matrix::<2, 2>::from([
+			[1., 2.],
+			[3., 4.],
+		]);
+		let expected = Matrix::<2, 2>::from([
+			[0., 0.],
+			[0., 0.],
+		]);
+		assert!(foo - foo == expected);
+	}
+
+	#[test]
+	fn test_mul() {
+		let foo = Matrix::<2, 2>::from([
+			[1., 2.],
+			[3., 4.],
+		]);
+		let expected = Matrix::<2, 2>::from([
+			[2., 4.],
+			[6., 8.],
+		]);
+		assert!(foo * 2. == expected);
+	}
+
+	#[test]
+	fn test_eq_neq() {
+		let mut foo = Matrix::<2, 2>::from([
+			[1., 2.],
+			[3., 4.],
+		]);
+		assert!(foo == foo);
+		let bar = foo;
+		foo = foo * 2.;
+		assert!(foo != bar);
 	}
 }
