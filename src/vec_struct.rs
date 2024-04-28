@@ -22,7 +22,7 @@ pub(crate) use vector;
 
 impl<const N: usize, K: Mathable> Default for Vector<N, K> {
 	fn default() -> Vector<N, K> {
-		Vector::<N, K> { data: [K::from(0.); N] }
+		Vector::<N, K> { data: [K::default(); N] }
 	}
 }
 

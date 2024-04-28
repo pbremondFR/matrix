@@ -1,6 +1,6 @@
 use num_traits::*;
 
-pub trait Mathable: Copy + Signed + NumAssignOps + From<f32> {
+pub trait Mathable: Copy + Signed + NumAssignOps + Default{
 	fn mul_add(self, a: Self, b: Self) -> Self;
 }
 
