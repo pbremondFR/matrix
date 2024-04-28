@@ -87,7 +87,8 @@ ops::Mul<T> for Vector<N, K> {
 	type Output = Self;
 
 	fn mul(self, rhs: T) -> Self {
-		let mul: Vec<K> = self.data.iter().map(|&x| x * rhs.into()).collect();
+		let rhs: K = rhs.into();
+		let mul: Vec<K> = self.data.iter().map(|&x| x * rhs).collect();
 		Self::from_slice(&mul)
 	}
 }

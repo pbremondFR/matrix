@@ -1,11 +1,17 @@
 use num_traits::*;
 
-pub trait Mathable: Copy + Signed {
-	fn from(x: f32) -> Self;
+pub trait Mathable: Copy + Signed + NumAssignOps + From<f32> {
+	fn mul_add(self, a: Self, b: Self) -> Self;
 }
 
 impl Mathable for f32 {
-	fn from(x: f32) -> Self {
-		x
+	fn mul_add(self, a: Self, b: Self) -> Self {
+		self.mul_add(a, b)
+	}
+}
+
+impl Mathable for f64 {
+	fn mul_add(self, a: Self, b: Self) -> Self {
+		self.mul_add(a, b)
 	}
 }

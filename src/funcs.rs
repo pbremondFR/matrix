@@ -1,12 +1,29 @@
+use num_traits::MulAddAssign;
+
 use crate::{math_traits::Mathable, vec_struct::*};
 
-fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K> {
+fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
+where
+	K: Into<f32>	// Wait that's fucking useless, there's no SFINAE, GIVE ME BACK C++ NOW
+{
 	if coefs.len() != u.len() {
 		panic!();
 	}
+	// TODO: Benchmark me VS mul_add!
+
+	// {
+	// 	let mut res = Vector::<N, K>::new();
+	// 	for i in 0..u.len() {
+	// 		res = res + u[i] * coefs[i];
+	// 	}
+	// }
 	let mut res = Vector::<N, K>::new();
 	for i in 0..u.len() {
-		res = res + u[i] * coefs[i];
+		let coef = coefs[i];
+		for j in 0..N {
+			let x = u[i][j];
+			res[j] = x.mul_add(coef, res[j]);
+		}
 	}
 	return res;
 }
