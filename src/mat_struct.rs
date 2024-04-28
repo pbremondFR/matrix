@@ -74,8 +74,7 @@ impl<const M: usize, const N: usize, K: Mathable> PartialEq for Matrix<M, N, K> 
 	}
 }
 
-impl<const M: usize, const N: usize, K: Mathable>
-ops::Add<Matrix<M, N, K>> for Matrix<M, N, K> {
+impl<const M: usize, const N: usize, K: Mathable> ops::Add<Matrix<M, N, K>> for Matrix<M, N, K> {
 	type Output = Self;
 
 	fn add(self, rhs: Self) -> Self {
@@ -96,8 +95,11 @@ ops::Sub<Matrix<M, N, K>> for Matrix<M, N, K> {
 	}
 }
 
-impl<const M: usize, const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
-ops::Mul<T> for Matrix<M, N, K> {
+impl<const M: usize, const N: usize, K, T> ops::Mul<T> for Matrix<M, N, K>
+where
+	K: Mathable,
+	T: Mathable + std::convert::Into<K>
+{
 	type Output = Self;
 
 	fn mul(self, rhs: T) -> Self {
@@ -109,8 +111,11 @@ ops::Mul<T> for Matrix<M, N, K> {
 	}
 }
 
-impl<const M: usize, const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
-ops::Div<T> for Matrix<M, N, K> {
+impl<const M: usize, const N: usize, K, T> ops::Div<T> for Matrix<M, N, K>
+where
+	K: Mathable,
+	T: Mathable + std::convert::Into<K>
+{
 	type Output = Self;
 
 	fn div(self, rhs: T) -> Self {
@@ -122,8 +127,7 @@ ops::Div<T> for Matrix<M, N, K> {
 	}
 }
 
-impl<const M: usize, const N: usize, K: Mathable>
-ops::Neg for Matrix<M, N, K> {
+impl<const M: usize, const N: usize, K: Mathable> ops::Neg for Matrix<M, N, K> {
 	type Output = Self;
 
 	fn neg(self) -> Self::Output {

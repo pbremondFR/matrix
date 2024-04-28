@@ -82,8 +82,11 @@ impl<const N: usize> ops::Sub<Vector<N>> for Vector<N> {
 	}
 }
 
-impl<const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
-ops::Mul<T> for Vector<N, K> {
+impl<const N: usize, K, T> ops::Mul<T> for Vector<N, K>
+where
+	K: Mathable,
+	T: Mathable + std::convert::Into<K>
+{
 	type Output = Self;
 
 	fn mul(self, rhs: T) -> Self {
@@ -93,8 +96,11 @@ ops::Mul<T> for Vector<N, K> {
 	}
 }
 
-impl<const N: usize, K: Mathable, T: Mathable + std::convert::Into<K>>
-ops::Div<T> for Vector<N, K> {
+impl<const N: usize, K, T> ops::Div<T> for Vector<N, K>
+where
+	K: Mathable,
+	T: Mathable + std::convert::Into<K>
+{
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
