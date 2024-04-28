@@ -3,8 +3,6 @@ use num_traits::MulAddAssign;
 use crate::{math_traits::Mathable, vec_struct::*};
 
 fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
-where
-	K: Into<f32>	// Wait that's fucking useless, there's no SFINAE, GIVE ME BACK C++ NOW
 {
 	if coefs.len() != u.len() {
 		panic!();
