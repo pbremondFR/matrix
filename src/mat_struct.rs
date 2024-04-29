@@ -86,8 +86,7 @@ impl<const M: usize, const N: usize, K: Mathable> ops::Add<Matrix<M, N, K>> for 
 	}
 }
 
-impl<const M: usize, const N: usize, K: Mathable>
-ops::Sub<Matrix<M, N, K>> for Matrix<M, N, K> {
+impl<const M: usize, const N: usize, K: Mathable> ops::Sub<Matrix<M, N, K>> for Matrix<M, N, K> {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self {
@@ -97,8 +96,8 @@ ops::Sub<Matrix<M, N, K>> for Matrix<M, N, K> {
 
 impl<const M: usize, const N: usize, K, T> ops::Mul<T> for Matrix<M, N, K>
 where
-	K: Mathable,
-	T: Mathable + std::convert::Into<K>
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
 {
 	type Output = Self;
 
@@ -113,8 +112,8 @@ where
 
 impl<const M: usize, const N: usize, K, T> ops::Div<T> for Matrix<M, N, K>
 where
-	K: Mathable,
-	T: Mathable + std::convert::Into<K>
+	K: Mathable + ops::Div<T, Output = K>,
+	T: Mathable
 {
 	type Output = Self;
 

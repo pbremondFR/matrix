@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::{fmt, ops};
+use std::{fmt, ops::{self}};
 
 use crate::math_traits::Mathable;
 
@@ -40,6 +40,15 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 	pub fn from_slice(src: &[K]) -> Self {
 		Self { data: src.try_into().expect("Bad slice length") }
 	}
+
+	pub fn norm(self) -> f32
+	{
+		let mut acc: K = self[0] * self[0];
+		for i in 1..N {
+			acc += self[i] * self[i];
+		}
+		acc.sqrt()
+	}
 }
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
@@ -74,7 +83,7 @@ impl<const N: usize, K: Mathable> ops::Add<Vector<N, K>> for Vector<N, K> {
 	}
 }
 
-impl<const N: usize> ops::Sub<Vector<N>> for Vector<N> {
+impl<const N: usize, K: Mathable> ops::Sub<Vector<N, K>> for Vector<N, K> {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self {
@@ -84,13 +93,12 @@ impl<const N: usize> ops::Sub<Vector<N>> for Vector<N> {
 
 impl<const N: usize, K, T> ops::Mul<T> for Vector<N, K>
 where
-	K: Mathable,
-	T: Mathable + std::convert::Into<K>
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
 {
 	type Output = Self;
 
 	fn mul(self, rhs: T) -> Self {
-		let rhs: K = rhs.into();
 		let mul: Vec<K> = self.data.iter().map(|&x| x * rhs).collect();
 		Self::from_slice(&mul)
 	}
@@ -98,13 +106,13 @@ where
 
 impl<const N: usize, K, T> ops::Div<T> for Vector<N, K>
 where
-	K: Mathable,
-	T: Mathable + std::convert::Into<K>
+	K: Mathable + ops::Div<T, Output = K>,
+	T: Mathable
 {
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
-		let res: Vec<K> = self.data.iter().map(|&v| v / rhs.into()).collect();
+		let res: Vec<K> = self.data.iter().map(|&v| v / rhs).collect();
         Self::from_slice(&res)
     }
 }
@@ -134,7 +142,9 @@ impl<const N: usize> fmt::Display for Vector<N> {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+	use num_traits::abs_sub;
+
+use super::*;
 
 	#[test]
 	fn test_add() {
@@ -162,5 +172,11 @@ mod tests {
 		assert!(test == test);
 		let test2 = -test;
 		assert!(test != test2);
+	}
+
+	#[test]
+	fn test_norm() {
+		assert_eq!(vector!(0., 1.).norm(), 1.);
+		assert!(abs_sub(vector!(42., 42.).norm(), 59.39696961966999) < 0.00000000000001);
 	}
 }

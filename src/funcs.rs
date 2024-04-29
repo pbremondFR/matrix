@@ -1,5 +1,3 @@
-use num_traits::MulAddAssign;
-
 use crate::{math_traits::Mathable, vec_struct::*};
 
 fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
