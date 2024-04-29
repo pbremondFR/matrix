@@ -1,7 +1,9 @@
 use num_traits::*;
 
 pub trait Mathable: Copy + Signed + NumAssignOps + Default {
-	fn mul_add(self, a: Self, b: Self) -> Self;
+	fn mul_add(self, a: Self, b: Self) -> Self {
+		self * a + b
+	}
 	fn sqrt(self) -> f32;
 }
 

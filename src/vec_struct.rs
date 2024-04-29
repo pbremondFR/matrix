@@ -49,6 +49,25 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		}
 		acc.sqrt()
 	}
+
+	/*
+	 * "If you’re curious about vector spaces of complex numbers, and already know enough
+	 * about complex numbers, you might want to look up the terms conjugate transpose,
+	 * sesquilinear algebra, and Pre-Hilbert space."
+	 *
+	 * "Those interested in electronics, control systems in engineering,
+	 * or quantum mechanics should definitely study complex numbers and
+	 * sesquilinear algebra."
+	 *
+	 * TODO, I guess?
+	 */
+	pub fn dot(self, v: &Vector<N, K>) -> K {
+		let mut res = self[0] * v[0];
+		for i in 1..N {
+			res = self[i].mul_add(v[i], res);
+		}
+		res
+	}
 }
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
@@ -172,6 +191,22 @@ use super::*;
 		assert!(test == test);
 		let test2 = -test;
 		assert!(test != test2);
+	}
+
+	#[test]
+	fn test_dot_product() {
+		let u = Vector::from([0., 0.]);
+		let v = Vector::from([1., 1.]);
+		assert_eq!(u.dot(&v), 0.0);
+
+		let u = Vector::from([1., 1.]);
+		let v = Vector::from([1., 1.]);
+		assert_eq!(u.dot(&v), 2.0);
+
+
+		let u = Vector::from([-1.0, 6.0]);
+		let v = Vector::from([3.0, 2.0]);
+		assert_eq!(u.dot(&v), 9.0);
 	}
 
 	#[test]
