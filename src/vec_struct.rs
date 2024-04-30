@@ -41,13 +41,16 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		Self { data: src.try_into().expect("Bad slice length") }
 	}
 
-	pub fn norm(self) -> f32
+	pub fn norm(self) -> f32 where f32: From<K>
 	{
 		let mut acc: K = self[0] * self[0];
 		for i in 1..N {
-			acc += self[i] * self[i];
+			acc = self[i].mul_add(self[i], acc);
 		}
-		acc.sqrt()
+		acc.sqrt().into()
+
+		// TODO: Benchmark! Which is faster?
+		// self.dot(&self).sqrt()
 	}
 
 	/*
@@ -213,5 +216,11 @@ use super::*;
 	fn test_norm() {
 		assert_eq!(vector!(0., 1.).norm(), 1.);
 		assert!(abs_sub(vector!(42., 42.).norm(), 59.39696961966999) < 0.00000000000001);
+
+		let u = vector!(0.0, 0.0, 0.0);
+		assert_eq!(u.norm(), 0.0);
+
+		let u = vector!(1.0, 2.0, 3.0);
+		assert_eq!(u.norm(), 3.74165738);
 	}
 }

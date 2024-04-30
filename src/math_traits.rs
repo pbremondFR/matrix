@@ -4,7 +4,7 @@ pub trait Mathable: Copy + Signed + NumAssignOps + Default {
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self * a + b
 	}
-	fn sqrt(self) -> f32;
+	fn sqrt(self) -> Self where Self: Into<f32>;
 }
 
 impl Mathable for f32 {
@@ -20,8 +20,8 @@ impl Mathable for f64 {
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self.mul_add(a, b)
 	}
-	fn sqrt(self) -> f32 {
-		self.sqrt() as f32
+	fn sqrt(self) -> Self {
+		self.sqrt()
 	}
 }
 
