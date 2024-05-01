@@ -2,7 +2,7 @@
 
 use std::{fmt, ops::{self}};
 
-use crate::math_traits::Mathable;
+use crate::math_traits::{Complex, Mathable, Norm};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vector<const N: usize, K: Mathable = f32> {
@@ -41,18 +41,6 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		Self { data: src.try_into().expect("Bad slice length") }
 	}
 
-	pub fn norm(self) -> f32 where f32: From<K>
-	{
-		let mut acc: K = self[0] * self[0];
-		for i in 1..N {
-			acc = self[i].mul_add(self[i], acc);
-		}
-		acc.sqrt().into()
-
-		// TODO: Benchmark! Which is faster?
-		// self.dot(&self).sqrt()
-	}
-
 	/*
 	 * "If you’re curious about vector spaces of complex numbers, and already know enough
 	 * about complex numbers, you might want to look up the terms conjugate transpose,
@@ -70,6 +58,46 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 			res = self[i].mul_add(v[i], res);
 		}
 		res
+	}
+}
+
+impl<const N: usize, K: Mathable> Norm<K> for Vector<N, K>
+{
+	default fn norm_1(self) -> K {
+		// Would have been nice but don't want to implement whatever trait this is for K
+		// self.data.into_iter().map(|x| x.abs()).sum()
+		let mut res = self[0].abs();
+		for i in 1..N {
+			res += self[i].abs()
+		}
+		res
+	}
+
+	default fn norm(self) -> K {
+		self.dot(&self).sqrt()
+	}
+
+	default fn norm_inf(self) -> K {
+		let mut res = self[0].abs();
+		for i in 1..N {
+			res = res.max(self[i].abs());
+		}
+		res
+	}
+}
+
+// Demonstration on how to specialize an impl so that I have sort of like SFNIAE but worse
+// For testing, and bonuses I guess, even though I might not make them at all...
+impl<const N: usize, T> Norm<f32> for Vector<N, T> where T: Mathable + Complex
+{
+	fn norm_1(self) -> f32 {
+		0.0
+	}
+	fn norm(self) -> f32 {
+		0.0
+	}
+	fn norm_inf(self) -> f32 {
+		0.0
 	}
 }
 
@@ -166,7 +194,12 @@ impl<const N: usize> fmt::Display for Vector<N> {
 mod tests {
 	use num_traits::abs_sub;
 
-use super::*;
+	use super::*;
+
+	#[test]
+	fn vec_f64() {
+		Vector::<3, f64>::from([1.0, 2.0, 3.0]);
+	}
 
 	#[test]
 	fn test_add() {
@@ -218,9 +251,18 @@ use super::*;
 		assert!(abs_sub(vector!(42., 42.).norm(), 59.39696961966999) < 0.00000000000001);
 
 		let u = vector!(0.0, 0.0, 0.0);
+		assert_eq!(u.norm_1(), 0.0);
 		assert_eq!(u.norm(), 0.0);
+		assert_eq!(u.norm_inf(), 0.0);
 
 		let u = vector!(1.0, 2.0, 3.0);
-		assert_eq!(u.norm(), 3.74165738);
+		assert_eq!(u.norm_1(), 6.0);
+		assert_eq!(u.norm(), 3.7416573867739413);
+		assert_eq!(u.norm_inf(), 3.0);
+
+		let u = vector!(-1.0, -2.0);
+		assert_eq!(u.norm_1(), 3.0);
+		assert_eq!(u.norm(), 2.23606797749979);
+		assert_eq!(u.norm_inf(), 2.0);
 	}
 }

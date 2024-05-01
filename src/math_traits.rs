@@ -4,15 +4,23 @@ pub trait Mathable: Copy + Signed + NumAssignOps + Default {
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self * a + b
 	}
-	fn sqrt(self) -> Self where Self: Into<f32>;
+	fn abs(self) -> Self;
+	fn max(self, other: Self) -> Self;
+	fn sqrt(self) -> Self;	// Don't bother implementing it for complex numbers!
 }
 
 impl Mathable for f32 {
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self.mul_add(a, b)
 	}
-	fn sqrt(self) -> f32 {
-		self.sqrt()
+	fn abs(self) -> Self {
+		self.abs()
+	}
+	fn max(self, other: Self) -> Self {
+		self.max(other)
+	}
+	fn sqrt(self) -> Self {
+		self.powf(0.5)	// For some reason, I'm allowed to use pow but not sqrt?!
 	}
 }
 
@@ -20,10 +28,18 @@ impl Mathable for f64 {
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self.mul_add(a, b)
 	}
+	fn abs(self) -> Self {
+		self.abs()
+	}
+	fn max(self, other: Self) -> Self {
+		self.max(other)
+	}
 	fn sqrt(self) -> Self {
-		self.sqrt()
+		self.powf(0.5)	// For some reason, I'm allowed to use pow but not sqrt?!
 	}
 }
+
+pub trait Complex {}
 
 use std::ops::{Sub, Add, Mul};
 
@@ -31,7 +47,7 @@ use crate::{Matrix, Vector};
 
 // Trying out a default implementation, but it might be too much for complex numbers
 // or vectors and matrices? By only using Clone and not Copy it should be fine though
-pub trait PlsGiveSNFIAE<V>
+pub trait Lerp<V>
 where
 	V: Clone + Sub<Output = V> + Add<Output = V> + Mul<f32, Output = V>
 {
@@ -40,24 +56,33 @@ where
 	}
 }
 
-impl PlsGiveSNFIAE<f32> for f32 {
+impl Lerp<f32> for f32 {
 	fn lerp(u: f32, v: f32, t: f32) -> f32 {
 		t.mul_add(v - u, u)
 	}
 }
 
-impl<const N: usize, K> PlsGiveSNFIAE<Vector<N, K>> for Vector<N, K>
+impl<const N: usize, K> Lerp<Vector<N, K>> for Vector<N, K>
 where
 	K: Mathable + Mul<f32, Output = K>
 {
 	// Default impl
 }
 
-impl<const M: usize, const N: usize, K> PlsGiveSNFIAE<Matrix<M, N, K>> for Matrix<M, N, K>
+impl<const M: usize, const N: usize, K> Lerp<Matrix<M, N, K>> for Matrix<M, N, K>
 where
 	K: Mathable + Mul<f32, Output = K>
 {
 	// Default impl
+}
+
+pub trait Norm<T>
+where
+	T: Mathable
+{
+	fn norm_1(self) -> T;
+	fn norm(self) -> T;
+	fn norm_inf(self) -> T;
 }
 
 #[cfg(test)]

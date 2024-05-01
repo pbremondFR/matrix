@@ -1,3 +1,4 @@
+#![feature(min_specialization)]
 mod math_traits;
 mod mat_struct;
 mod vec_struct;
