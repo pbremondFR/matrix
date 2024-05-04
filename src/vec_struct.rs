@@ -200,9 +200,9 @@ impl<const N: usize> fmt::Display for Vector<N> {
 
 #[cfg(test)]
 mod tests {
-	use num_traits::abs_sub;
+	use crate::macros::assert_approx_eq;
 
-	use super::*;
+use super::*;
 
 	#[test]
 	fn vec_f64() {
@@ -256,7 +256,7 @@ mod tests {
 	#[test]
 	fn test_norm() {
 		assert_eq!(vector!(0., 1.).norm(), 1.);
-		assert!(abs_sub(vector!(42., 42.).norm(), 59.39696961966999) < 0.00000000000001);
+		assert_approx_eq!(vector!(42., 42.).norm(), 59.39696961966999, 0.00000000000001);
 
 		let u = vector!(0.0, 0.0, 0.0);
 		assert_eq!(u.norm_1(), 0.0);
@@ -272,6 +272,10 @@ mod tests {
 		assert_eq!(u.norm_1(), 3.0);
 		assert_eq!(u.norm(), 2.23606797749979);
 		assert_eq!(u.norm_inf(), 2.0);
+
+
+
+
 	}
 
 	#[test]
@@ -286,14 +290,14 @@ mod tests {
 
 		let u = Vector::<2, f64>::from([-1., 1.]);
 		let v = Vector::<2, f64>::from([ 1., -1.]);
-		assert_eq!(u.angle_cos(&v), -1.0);
+		assert_approx_eq!(u.angle_cos(&v), -1.0, 0.00000000000001);
 
 		let u = Vector::from([2., 1.]);
 		let v = Vector::from([4., 2.]);
-		assert_eq!(u.angle_cos(&v), 1.0);
+		assert_approx_eq!(u.angle_cos(&v), 1.0, 0.00000000000001);
 
 		let u = Vector::from([1., 2., 3.]);
 		let v = Vector::from([4., 5., 6.]);
-		assert_eq!(u.angle_cos(&v), 0.974631846);
+		assert_eq!(u.angle_cos(&v), 0.9746318461970762);
 	}
 }

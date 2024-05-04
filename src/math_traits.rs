@@ -92,7 +92,7 @@ pub trait AngleCos<T> {
 
 #[cfg(test)]
 mod tests {
-	use crate::vector;
+	use crate::{macros::assert_approx_eq, vector};
 
 use super::*;
 
@@ -103,7 +103,7 @@ use super::*;
 		assert_eq!(f32::lerp(0., 1., 0.5), 0.5);
 		assert_eq!(f32::lerp(0., 1., 2.0), 2.0);
 		assert_eq!(f32::lerp(0., 1., -2.0), -2.0);
-		assert!(abs_sub(f32::lerp(21., 42., 0.3), 27.3) < 0.00001);
+		assert_approx_eq!(f32::lerp(21., 42., 0.3), 27.3, 0.00001);
 		assert_eq!(f32::lerp(21., 42., -0.3), 14.7);
 	}
 
@@ -113,8 +113,8 @@ use super::*;
 		let b = Vector::from([4., 2.]);
 		let expected = vector!(2.6, 1.3);
 		let result = Vector::lerp(a, b, 0.3);
-		assert!(abs_sub(result[0], expected[0]) < 0.00000000000001);
-		assert!(abs_sub(result[1], expected[1]) < 0.00000000000001);
+		assert_approx_eq!(result[0], expected[0], 0.00000000000001);
+		assert_approx_eq!(result[1], expected[1], 0.00000000000001);
 	}
 
 	#[test]

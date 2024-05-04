@@ -4,6 +4,7 @@ mod math_traits;
 mod mat_struct;
 mod vec_struct;
 mod funcs;
+mod macros;
 
 use vec_struct::*;
 use mat_struct::*;

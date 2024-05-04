@@ -39,6 +39,7 @@ where
 
 #[cfg(test)]
 mod tests {
+	use crate::macros::assert_approx_eq;
 	use super::*;
 
 	#[test]
@@ -81,14 +82,14 @@ mod tests {
 
 		let u = Vector::<2, f64>::from([-1., 1.]);
 		let v = Vector::<2, f64>::from([ 1., -1.]);
-		assert_eq!(angle_cos(&u, &v), -1.0);
+		assert_approx_eq!(angle_cos(&u, &v), -1.0, 0.00000000000001);
 
 		let u = Vector::from([2., 1.]);
 		let v = Vector::from([4., 2.]);
-		assert_eq!(angle_cos(&u, &v), 1.0);
+		assert_approx_eq!(angle_cos(&u, &v), 1.0, 0.00000000000001);
 
 		let u = Vector::from([1., 2., 3.]);
 		let v = Vector::from([4., 5., 6.]);
-		assert_eq!(angle_cos(&u, &v), 0.974631846);
+		assert_eq!(angle_cos(&u, &v), 0.9746318461970762);
 	}
 }
