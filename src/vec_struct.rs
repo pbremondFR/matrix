@@ -2,7 +2,7 @@
 
 use std::{fmt, ops::{self}};
 
-use crate::math_traits::{Complex, Mathable, Norm};
+use crate::math_traits::{Mathable, Norm, RealNumber};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vector<const N: usize, K: Mathable = f32> {
@@ -60,8 +60,8 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		res
 	}
 }
-
-impl<const N: usize, K: Mathable> Norm<K> for Vector<N, K>
+impl<const N: usize, K> Norm<K> for Vector<N, K>
+where K: Mathable + RealNumber
 {
 	default fn norm_1(self) -> K {
 		// Would have been nice but don't want to implement whatever trait this is for K
@@ -88,18 +88,18 @@ impl<const N: usize, K: Mathable> Norm<K> for Vector<N, K>
 
 // Demonstration on how to specialize an impl so that I have sort of like SFNIAE but worse
 // For testing, and bonuses I guess, even though I might not make them at all...
-impl<const N: usize, T> Norm<f32> for Vector<N, T> where T: Mathable + Complex
-{
-	fn norm_1(self) -> f32 {
-		0.0
-	}
-	fn norm(self) -> f32 {
-		0.0
-	}
-	fn norm_inf(self) -> f32 {
-		0.0
-	}
-}
+// impl<const N: usize, T: Mathable> Norm<T> for Vector<N, ComplexNum<T>>
+// {
+// 	fn norm_1(self) -> T {
+// 		T::default()
+// 	}
+// 	fn norm(self) -> T {
+// 		T::default()
+// 	}
+// 	fn norm_inf(self) -> T {
+// 		T::default()
+// 	}
+// }
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	type Output = K;

@@ -1,4 +1,6 @@
 use num_traits::*;
+use std::ops::{Sub, Add, Mul};
+use crate::{Matrix, Vector};
 
 pub trait Mathable: Copy + Signed + NumAssignOps + Default {
 	fn mul_add(self, a: Self, b: Self) -> Self {
@@ -39,11 +41,9 @@ impl Mathable for f64 {
 	}
 }
 
-pub trait Complex {}
-
-use std::ops::{Sub, Add, Mul};
-
-use crate::{Matrix, Vector};
+pub trait RealNumber: Mathable {}
+impl RealNumber for f32 {}
+impl RealNumber for f64 {}
 
 // Trying out a default implementation, but it might be too much for complex numbers
 // or vectors and matrices? By only using Clone and not Copy it should be fine though
