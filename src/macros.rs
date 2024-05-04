@@ -3,7 +3,7 @@ macro_rules! assert_approx_eq {
         let (left, right, epsilon) = ($left, $right, $epsilon);
         assert!(
             (left - right).abs() < epsilon,
-            "{left} is not equal to {right} account error margin of {epsilon}"
+            "{left} != {right} accounting error margin of {epsilon}"
         );
     }};
 }
