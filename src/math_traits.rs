@@ -47,6 +47,7 @@ impl RealNumber for f64 {}
 
 // Trying out a default implementation, but it might be too much for complex numbers
 // or vectors and matrices? By only using Clone and not Copy it should be fine though
+// TODO: Take in references for performance reasons?
 pub trait Lerp<V>
 where
 	V: Clone + Sub<Output = V> + Add<Output = V> + Mul<f32, Output = V>
@@ -83,6 +84,10 @@ where
 	fn norm_1(self) -> T;
 	fn norm(self) -> T;
 	fn norm_inf(self) -> T;
+}
+
+pub trait AngleCos<T> {
+	fn angle_cos(self, v: &Self) -> T;
 }
 
 #[cfg(test)]

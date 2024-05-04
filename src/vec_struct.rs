@@ -2,7 +2,7 @@
 
 use std::{fmt, ops::{self}};
 
-use crate::math_traits::{Mathable, Norm, RealNumber};
+use crate::math_traits::*;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vector<const N: usize, K: Mathable = f32> {
@@ -100,6 +100,14 @@ where K: Mathable + RealNumber
 // 		T::default()
 // 	}
 // }
+
+impl<const N: usize, T> AngleCos<T> for Vector<N, T>
+where T: Mathable + RealNumber
+{
+	fn angle_cos(self, v: &Self) -> T {
+		self.dot(v) / (self.norm() * v.norm())
+	}
+}
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	type Output = K;
@@ -264,5 +272,28 @@ mod tests {
 		assert_eq!(u.norm_1(), 3.0);
 		assert_eq!(u.norm(), 2.23606797749979);
 		assert_eq!(u.norm_inf(), 2.0);
+	}
+
+	#[test]
+	fn test_angle_cos_method() {
+		let u = Vector::from([1., 0.]);
+		let v = Vector::from([1., 0.]);
+		assert_eq!(u.angle_cos(&v), 1.0);
+
+		let u = Vector::from([1., 0.]);
+		let v = Vector::from([0., 1.]);
+		assert_eq!(u.angle_cos(&v), 0.0);
+
+		let u = Vector::<2, f64>::from([-1., 1.]);
+		let v = Vector::<2, f64>::from([ 1., -1.]);
+		assert_eq!(u.angle_cos(&v), -1.0);
+
+		let u = Vector::from([2., 1.]);
+		let v = Vector::from([4., 2.]);
+		assert_eq!(u.angle_cos(&v), 1.0);
+
+		let u = Vector::from([1., 2., 3.]);
+		let v = Vector::from([4., 5., 6.]);
+		assert_eq!(u.angle_cos(&v), 0.974631846);
 	}
 }
