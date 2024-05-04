@@ -1,4 +1,5 @@
-#![feature(min_specialization)]
+#![feature(specialization)]
+#![feature(associated_type_defaults)]
 mod math_traits;
 mod mat_struct;
 mod vec_struct;

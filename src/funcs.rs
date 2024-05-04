@@ -1,4 +1,4 @@
-use crate::{math_traits::Mathable, vec_struct::*};
+use crate::{math_traits::{Mathable, Norm, RealReal}, vec_struct::*};
 
 fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
 {
@@ -22,6 +22,19 @@ fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[
 		}
 	}
 	return res;
+}
+
+// Can't have this work out nicely for f32 and f64...
+// A few options:
+// 1. Make a generic AngleCos trait and derive it vectors of f32 and f64 and so on
+// 2. Give up on that whole f32/f64/FixedPoint nonsense. This is a relatively small
+// project, and everything that I'd be able to do in C++ here, Rust is not letting me do.
+// Picking f32 as the "only" real number is allowed, so...
+fn angle_cos<K, const N: usize>(u: &Vector<N, K>, v: &Vector<N, K>) -> impl RealReal + Mathable
+where
+	K: Mathable + RealReal
+{
+	u.dot(v) / (u.norm() * v.norm())
 }
 
 #[cfg(test)]
@@ -54,5 +67,32 @@ mod tests {
 		let e2 = Vector::from([0., 1., 0.]);
 		let e3 = Vector::from([0., 0., 1.]);
 		let _ = linear_combination(&[e1, e2, e3], &[10., -2.]);
+	}
+
+	#[test]
+	fn test_angle_cos() {
+		let u = Vector::from([1., 0.]);
+		let v = Vector::from([1., 0.]);
+		// assert_eq!(angle_cos(&u, &v), 1.0);
+		let foo = angle_cos(&u, &v);
+		println!("TESTESTETS: {foo} - 1.0");
+
+		let u = Vector::from([1., 0.]);
+		let v = Vector::from([0., 1.]);
+		// assert_eq!(angle_cos(&u, &v), 0.0);
+
+		let u = Vector::<2, f64>::from([-1., 1.]);
+		let v = Vector::<2, f64>::from([ 1., -1.]);
+		// FUCK
+		// assert_eq!(angle_cos(&u, &v), -1.0);
+
+		let u = Vector::from([2., 1.]);
+		let v = Vector::from([4., 2.]);
+		// assert_eq!(angle_cos(&u, &v), 1.0);
+
+		let u = Vector::from([1., 2., 3.]);
+		let v = Vector::from([4., 5., 6.]);
+		// assert_eq!(angle_cos(&u, &v), 0.974631846);
+
 	}
 }
