@@ -77,6 +77,14 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 			self[n][i] = vec[i];
 		}
 	}
+
+	pub fn transpose(&self) -> Matrix<N, M, K> {
+		let mut res = Matrix::<N, M, K>::new();
+		for i in 0..N {
+			res.set_row(i, self.get_column(i));
+		}
+		res
+	}
 }
 
 impl<const M: usize, K: Mathable> Matrix<M, M, K> {
@@ -389,5 +397,41 @@ use super::*;
 			[ 0.,  6.,  4.],
 		]);
 		assert_eq!(u.trace(), -21.0);
+	}
+
+	#[test]
+	fn transpose() {
+		let a = Matrix::from([
+			[1.0, 3.0, 5.0],
+			[2.0, 4.0, 6.0]
+		]);
+		let b = Matrix::from([
+			[1.0, 2.0],
+			[3.0, 4.0],
+			[5.0, 6.0]
+		]);
+		assert_eq!(a.transpose(), b);
+		assert_eq!(b.transpose(), a);
+
+		let a = Matrix::from([
+			[1.0, 2.0],
+			[3.0, 4.0]
+		]);
+		let b = Matrix::from([
+			[1.0, 3.0],
+			[2.0, 4.0]
+		]);
+		assert_eq!(a.transpose(), b);
+		assert_eq!(b.transpose(), a);
+
+		let a = Matrix::from([
+			[1.0, 2.0]
+		]);
+		let b = Matrix::from([
+			[1.0],
+			[2.0]
+		]);
+		assert_eq!(a.transpose(), b);
+		assert_eq!(b.transpose(), a);
 	}
 }
