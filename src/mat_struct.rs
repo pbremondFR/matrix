@@ -52,6 +52,10 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		&self.data
 	}
 
+	pub fn shape(&self) -> (usize, usize) {
+		(M, N)
+	}
+
 	pub fn get_row(self, m: usize) -> Vector<N, K> {
 		self[m]
 	}
@@ -72,6 +76,16 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		for i in 0..M {
 			self[n][i] = vec[i];
 		}
+	}
+}
+
+impl<const M: usize, K: Mathable> Matrix<M, M, K> {
+	fn trace(&self) -> K {
+		let mut res = self[0][0];
+		for i in 1..M {
+			res += self[i][i];
+		}
+		res
 	}
 }
 
@@ -324,8 +338,7 @@ use super::*;
 			[0., 1.],
 		]);
 		assert_eq!(u * v, expected);
-		// [1., 0.]
-		// [0., 1.]
+
 		let u = Matrix::from([
 			[1., 0.],
 			[0., 1.],
@@ -339,22 +352,42 @@ use super::*;
 			[4., 2.],
 		]);
 		assert_eq!(u * v, expected);
-		// [2., 1.]
-		// [4., 2.]
+
 		let u = Matrix::from([
 			[3., -5.],
-			[6., 8.],
+			[6.,  8.],
 		]);
 		let v = Matrix::from([
 			[2., 1.],
 			[4., 2.],
 		]);
 		let expected = Matrix::from([
-			[-14., -7.],
-			[44., 22.],
+			[-14., -7. ],
+			[ 44.,  22.],
 		]);
 		assert_eq!(u * v, expected);
-		// [-14., -7.]
-		// [44., 22.]
+	}
+
+	#[test]
+	fn trace() {
+		let u = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		assert_eq!(u.trace(), 2.0);
+
+		let u = Matrix::from([
+			[ 2., -5., 0.],
+			[ 4.,  3., 7.],
+			[-2.,  3., 4.],
+		]);
+		assert_eq!(u.trace(), 9.0);
+
+		let u = Matrix::from([
+			[-2., -8.,  4.],
+			[ 1., -23., 4.],
+			[ 0.,  6.,  4.],
+		]);
+		assert_eq!(u.trace(), -21.0);
 	}
 }
