@@ -87,17 +87,17 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 	}
 
 	pub fn is_row_echelon(&self) -> bool {
-		let get_leading_entry = |i| -> usize {
+		let get_pivot = |i| -> usize {
 			self[i].as_slice().iter().position(|&x| x != K::zero()).unwrap_or(N)
 		};
 
-		let mut leading_entry = get_leading_entry(0);
+		let mut pivot = get_pivot(0);
 		for i in 1..M {
-			let new_leading_entry = get_leading_entry(i);
-			if new_leading_entry <= leading_entry && new_leading_entry != N {
+			let new_pivot = get_pivot(i);
+			if new_pivot <= pivot && new_pivot != N {
 				return false;
 			}
-			leading_entry = new_leading_entry;
+			pivot = new_pivot;
 		}
 		return true;
 	}
@@ -494,5 +494,32 @@ use super::*;
 			[0.0, 0.0,   0.0, 1.0,  29.5      ],
 		]);
 		assert!(u.is_row_echelon());
+
+		let u = Matrix::from([
+			[1.0, 2.0, 3.0, 4.0, 5.0],
+			[0.0, 0.0, 2.0, 4.0, 5.0],
+			[0.0, 0.0, 0.0, 1.0, 5.0],
+			[0.0, 0.0, 0.0, 0.0, 0.0],
+			[0.0, 0.0, 0.0, 0.0, 0.0],
+		]);
+		assert!(u.is_row_echelon());
+
+		let u = Matrix::from([
+			[1.0, 2.0, 3.0, 4.0, 5.0],
+			[0.0, 0.0, 2.0, 4.0, 5.0],
+			[0.0, 0.0, 0.0, 0.0, 0.0],
+			[0.0, 0.0, 0.0, 1.0, 5.0],
+			[0.0, 0.0, 0.0, 0.0, 0.0],
+		]);
+		assert_ne!(u.is_row_echelon(), true);
+
+		let u = Matrix::from([
+			[1.0, 2.0, 3.0, 4.0, 5.0],
+			[0.0, 0.0, 2.0, 4.0, 5.0],
+			[0.0, 0.0, 0.0, 1.0, 5.0],
+			[0.0, 0.0, 0.0, 1.0, 5.0],
+			[0.0, 0.0, 0.0, 0.0, 0.0],
+		]);
+		assert_ne!(u.is_row_echelon(), true);
 	}
 }
