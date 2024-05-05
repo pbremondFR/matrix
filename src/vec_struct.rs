@@ -59,6 +59,10 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		}
 		res
 	}
+
+	pub fn as_slice(&self) -> &[K] {
+		&self.data
+	}
 }
 impl<const N: usize, K> Norm<K> for Vector<N, K>
 where K: Mathable + RealNumber

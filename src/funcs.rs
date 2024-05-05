@@ -1,6 +1,6 @@
 use crate::{math_traits::*, vec_struct::*, Matrix};
 
-fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
+pub fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
 {
 	if coefs.len() != u.len() {
 		panic!();
@@ -17,8 +17,7 @@ fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[
 	for i in 0..u.len() {
 		let coef = coefs[i];
 		for j in 0..N {
-			let x = u[i][j];
-			res[j] = x.mul_add(coef, res[j]);
+			res[j] = u[i][j].mul_add(coef, res[j]);
 		}
 	}
 	return res;
@@ -37,7 +36,7 @@ where
 	u.dot(v) / (u.norm() * v.norm())
 }
 
-fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<3, K> {
+pub fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<3, K> {
 	// This is almost boring, straight from Wikipedia. Maybe there's a way to be more clever here?
 	Vector::<3, K>::from([
 		u[1].mul_add(v[2], -u[2] * v[1]),	// u[1] * v[2] - u[2] * v[1],

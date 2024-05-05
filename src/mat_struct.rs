@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{math_traits::Mathable, Vector};
+use crate::{funcs::linear_combination, math_traits::Mathable, Vector};
 use std::{fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
@@ -46,6 +46,32 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 			ret.data[idx] = Vector::from(vec);
 		}
 		ret
+	}
+
+	pub fn as_slice(&self) -> &[Vector<N, K>] {
+		&self.data
+	}
+
+	pub fn get_row(self, m: usize) -> Vector<N, K> {
+		self[m]
+	}
+
+	pub fn set_row(&mut self, m: usize, vec: Vector<N, K>) {
+		self[m] = vec;
+	}
+
+	pub fn get_column(self, n: usize) -> Vector<M, K> {
+		let mut res = Vector::<M, K>::new();
+		for i in 0..M {
+			res[i] = self[i][n];
+		}
+		res
+	}
+
+	pub fn set_column(&mut self, n: usize, vec: Vector<M, K>) {
+		for i in 0..M {
+			self[n][i] = vec[i];
+		}
 	}
 }
 
@@ -94,6 +120,7 @@ impl<const M: usize, const N: usize, K: Mathable> ops::Sub<Matrix<M, N, K>> for 
 	}
 }
 
+// Matrix multiplication by number
 impl<const M: usize, const N: usize, K, T> ops::Mul<T> for Matrix<M, N, K>
 where
 	K: Mathable + ops::Mul<T, Output = K>,
@@ -101,10 +128,46 @@ where
 {
 	type Output = Self;
 
-	fn mul(self, rhs: T) -> Self {
+	fn mul(self, rhs: T) -> Self::Output {
 		let mut res = self.clone();
 		for i in 0..M {
 			res[i] = res[i] * rhs;
+		}
+		res
+	}
+}
+
+// Matrix multiplication by vector
+impl<const M: usize, const N: usize, K> ops::Mul<Vector<N, K>> for Matrix<M, N, K>
+where
+	K: Mathable
+{
+	type Output = Vector<M, K>;
+
+	fn mul(self, vec: Vector<N, K>) -> Self::Output {
+		let mut res = Vector::<M, K>::new();
+		for i in 0..M {
+			res[i] = vec.dot(&self[i]);
+		}
+		res
+	}
+}
+
+// Matrix multiplication by other matrix
+impl<const M: usize, const N: usize, const P: usize, K> ops::Mul<Matrix<N, P, K>> for Matrix<M, N, K>
+where
+	K: Mathable
+{
+	type Output = Matrix<M, P, K>;
+
+	fn mul(self, matrix: Matrix<N, P, K>) -> Self::Output {
+		// I think I'll leave matrix multiplication optimization to the mathematicians
+		// and computer scientists.
+		let mut res = Self::Output::new();
+		for i in 0..M {
+			for j in 0..P {
+				res[i][j] = self.get_row(i).dot(&matrix.get_column(j));
+			}
 		}
 		res
 	}
@@ -156,7 +219,9 @@ impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+	use crate::vector;
+
+use super::*;
 
 	#[test]
 	fn test_add() {
@@ -211,5 +276,85 @@ mod tests {
 		let bar = foo;
 		foo = foo * 2.;
 		assert!(foo != bar);
+	}
+
+	#[test]
+	fn mul_vec() {
+		let u = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		let v = Vector::from([4., 2.]);
+		assert_eq!(u * v, vector!(4.0, 2.0));
+
+		let u = Matrix::from([
+			[2., 0.],
+			[0., 2.],
+		]);
+		let v = Vector::from([4., 2.]);
+		assert_eq!(u * v, vector!(8.0, 4.0));
+
+		let u = Matrix::from([
+			[2., -2.],
+			[-2., 2.],
+		]);
+		let v = Vector::from([4., 2.]);
+		assert_eq!(u * v, vector!(4.0, -4.0));
+
+		let u = Matrix::from([
+			[1.0, -1.0, 2.0],
+			[0.0, -3.0, 1.0]
+		]);
+		let v = Vector::from([2.0, 1.0, 0.0]);
+		assert_eq!(u * v, vector!(1.0, -3.0));
+	}
+
+	#[test]
+	fn mul_mat() {
+		let u = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		let v = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		let expected = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		assert_eq!(u * v, expected);
+		// [1., 0.]
+		// [0., 1.]
+		let u = Matrix::from([
+			[1., 0.],
+			[0., 1.],
+		]);
+		let v = Matrix::from([
+			[2., 1.],
+			[4., 2.],
+		]);
+		let expected = Matrix::from([
+			[2., 1.],
+			[4., 2.],
+		]);
+		assert_eq!(u * v, expected);
+		// [2., 1.]
+		// [4., 2.]
+		let u = Matrix::from([
+			[3., -5.],
+			[6., 8.],
+		]);
+		let v = Matrix::from([
+			[2., 1.],
+			[4., 2.],
+		]);
+		let expected = Matrix::from([
+			[-14., -7.],
+			[44., 22.],
+		]);
+		assert_eq!(u * v, expected);
+		// [-14., -7.]
+		// [44., 22.]
 	}
 }
