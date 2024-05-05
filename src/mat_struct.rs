@@ -85,6 +85,22 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		}
 		res
 	}
+
+	pub fn is_row_echelon(&self) -> bool {
+		let get_leading_entry = |i| -> usize {
+			self[i].as_slice().iter().position(|&x| x != K::zero()).unwrap_or(N)
+		};
+
+		let mut leading_entry = get_leading_entry(0);
+		for i in 1..M {
+			let new_leading_entry = get_leading_entry(i);
+			if new_leading_entry <= leading_entry && new_leading_entry != N {
+				return false;
+			}
+			leading_entry = new_leading_entry;
+		}
+		return true;
+	}
 }
 
 impl<const M: usize, K: Mathable> Matrix<M, M, K> {
@@ -433,5 +449,50 @@ use super::*;
 		]);
 		assert_eq!(a.transpose(), b);
 		assert_eq!(b.transpose(), a);
+	}
+
+	#[test]
+	fn is_row_echelon() {
+		let u = Matrix::from([
+			[1.0, 0.0, 0.0],
+			[0.0, 1.0, 0.0],
+			[0.0, 0.0, 1.0]
+		]);
+		assert!(u.is_row_echelon());
+
+		let u = Matrix::from([
+			[1.0, 2.0],
+			[3.0, 4.0]
+		]);
+		assert_ne!(u.is_row_echelon(), true);
+		let u = Matrix::from([
+			[1.0, 0.0],
+			[0.0, 1.0]
+		]);
+		assert!(u.is_row_echelon());
+
+		let u = Matrix::from([
+			[1., 2.],
+			[2., 4.],
+		]);
+		assert_ne!(u.is_row_echelon(), true);
+		let u = Matrix::from([
+			[1., 2.],
+			[0., 0.],
+		]);
+		assert!(u.is_row_echelon());
+
+		let u = Matrix::from([
+			[8., 5.,  -2.,  4.,  28.],
+			[4., 2.5,  20., 4., -4. ],
+			[8., 5.,   1.,  4.,  17.],
+		]);
+		assert_ne!(u.is_row_echelon(), true);
+		let u = Matrix::from([
+			[1.0, 0.625, 0.0, 0.0, -12.1666667],
+			[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
+			[0.0, 0.0,   0.0, 1.0,  29.5      ],
+		]);
+		assert!(u.is_row_echelon());
 	}
 }
