@@ -1,4 +1,4 @@
-use crate::{math_traits::*, vec_struct::*};
+use crate::{math_traits::*, vec_struct::*, Matrix};
 
 fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
 {
@@ -35,6 +35,15 @@ where
 	K: Mathable + RealNumber
 {
 	u.dot(v) / (u.norm() * v.norm())
+}
+
+fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<3, K> {
+	// This is almost boring, straight from Wikipedia. Maybe there's a way to be more clever here?
+	Vector::<3, K>::from([
+		u[1].mul_add(v[2], -u[2] * v[1]),	// u[1] * v[2] - u[2] * v[1],
+		u[2].mul_add(v[0], -u[0] * v[2]),	// u[2] * v[0] - u[0] * v[2],
+		u[0].mul_add(v[1], -u[1] * v[0])	// u[0] * v[1] - u[1] * v[0],
+	])
 }
 
 #[cfg(test)]
@@ -91,5 +100,20 @@ mod tests {
 		let u = Vector::from([1., 2., 3.]);
 		let v = Vector::from([4., 5., 6.]);
 		assert_eq!(angle_cos(&u, &v), 0.9746318461970762);
+	}
+
+	#[test]
+	fn test_cross_product() {
+		let u = Vector::from([0., 0., 1.]);
+		let v = Vector::from([1., 0., 0.]);
+		assert_eq!(cross_product(&u, &v), vector!(0.0, 1.0, 0.0));
+
+		let u = Vector::from([1., 2., 3.]);
+		let v = Vector::from([4., 5., 6.]);
+		assert_eq!(cross_product(&u, &v), vector!(-3.0, 6.0, -3.0));
+
+		let u = Vector::from([4., 2., -3.]);
+		let v = Vector::from([-2., -5., 16.]);
+		assert_eq!(cross_product(&u, &v), vector!(17.0, -58.0, -16.0));
 	}
 }

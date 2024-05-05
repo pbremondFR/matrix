@@ -272,10 +272,6 @@ use super::*;
 		assert_eq!(u.norm_1(), 3.0);
 		assert_eq!(u.norm(), 2.23606797749979);
 		assert_eq!(u.norm_inf(), 2.0);
-
-
-
-
 	}
 
 	#[test]
