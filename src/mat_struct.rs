@@ -114,98 +114,7 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		*self
 	}
 
-	// pub fn row_echelon(&self) -> Matrix<M, N, K>
-	// where K: RealNumber
-	// {
-	// 	let get_max_idx = |col: &[K], start_idx: usize| -> usize {
-	// 		let mut max_idx = start_idx;
-	// 		let mut max_val = K::zero();
-	// 		for (idx, val) in col.iter().enumerate() {
-	// 			if val.abs() > max_val {
-	// 				max_idx = idx;
-	// 				max_val = *val;
-	// 			}
-	// 		}
-	// 		max_idx
-	// 	};
-
-	// 	let mut res = self.clone();
-	// 	for i in 0..M {
-	// 		for j in 0..N {
-	// 			let max_idx = get_max_idx(res.get_column(i).as_slice(), i);
-	// 			if res[i][j] == K::zero() && max_idx != i {
-	// 				res.swap_rows(i, max_idx);
-	// 			}
-	// 			if res[i][j] == K::zero() && max_idx == i {
-	// 				continue;
-	// 			}
-	// 			if res[i][j] != K::zero() {
-	// 				for k in i + 1..M {
-	// 					let factor = res[i][j] / res[k][j];
-	// 					res[k] = res[k] - res[k] * factor;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-	// 	res
-	// }
-
-	// pub fn row_echelon(&self) -> Matrix<M, N, K> where K: RealNumber {
-
-	// 	let get_max_idx = |col: &[K], start_idx: usize| -> usize {
-	// 		let mut max_idx = start_idx;
-	// 		let mut max_val = K::zero();
-	// 		for (idx, val) in col.iter().enumerate() {
-	// 			if val.abs() > max_val {
-	// 				max_idx = idx;
-	// 				max_val = *val;
-	// 			}
-	// 		}
-	// 		max_idx
-	// 	};
-
-	// 	let get_first_non_zero = |col: &[K], start_idx: usize| -> usize {
-	// 		for (idx, val) in col.iter().enumerate() {
-	// 			if *val != K::zero() {
-	// 				return idx;
-	// 			}
-	// 		}
-	// 		return start_idx;
-	// 	};
-
-	// 	let mut res = self.clone();
-	// 	for mut i in 0..M {
-	// 		for j in i..N {
-	// 			// Identify the first non-zero row in the matrix
-	// 			let column = res.get_column(j);
-	// 			let max_idx = get_first_non_zero(column.as_slice(), i);
-	// 			i = max_idx;
-	// 			if res[max_idx][j] == K::zero() {
-	// 				continue;
-	// 			} else {
-	// 				res[i] = res[i] / res[i][j];
-	// 				for k in i + 1..M {
-	// 					res[k] = res[k] - (res[i] * res[k][j]);
-	// 				}
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// 	res
-	// }
-
 	pub fn row_echelon(&self) -> Self where K: RealNumber {
-		let find_pivot = |column: &[K], start_idx: usize| -> usize {
-			let mut max_idx = start_idx;
-			let mut max_val = K::zero();
-			for (idx, val) in column.iter().enumerate() {
-				if val.abs() >= max_val {
-					max_val = val.abs();
-					max_idx = idx;
-				}
-			}
-			max_idx
-		};
 
 		let find_first_non_zero = |col: &[K], start_idx: usize| {
 			for i in start_idx..col.len() {
@@ -236,10 +145,6 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 					let diff = res[i] * res[k][j];
 					res[k] -= diff;
 				}
-				// for k in pivot + 1..M {
-				// 	let diff = res[i] * res[k][j];
-				// 	res[k] -= diff;
-				// }
 				i += 1;
 				j += 1;
 			}
@@ -403,8 +308,25 @@ impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
 #[cfg(test)]
 mod tests {
 	use crate::vector;
+	use super::*;
 
-use super::*;
+	macro_rules! assert_matrices_approx_equal {
+		($m1:expr, $m2:expr, $epsilon:expr) => {{
+			let m1 = $m1;
+			let m2 = $m2;
+			let epsilon = $epsilon;
+
+			assert_eq!(m1.shape(), m2.shape());
+			let (m, n) = m1.shape();
+
+			for i in 0..m {
+				for j in 0..n {
+					assert!((m1[i][j] - m2[i][j]).abs() < epsilon,
+						"Matrices differ in coordinates {i},{j} with epsilon {epsilon}:\n{m1}\n\n{m2}");
+				}
+			}
+		}};
+	}
 
 	#[test]
 	fn sucka_ma_balls() {
@@ -429,9 +351,9 @@ use super::*;
 			[9.0, 12.0, 27.0]
 		]);
 		let you = Matrix::from([
-			[1.0, 4.0/3.0, 3.0     ],
-			[0.0, 1.0,     15.0/7.0],
-			[0.0, 0.0,     0.0     ]
+			[1.0, 0.0,  41.0/7.0],
+			[0.0, 1.0, -15.0/7.0],
+			[0.0, 0.0,  0.0     ]
 		]);
 		assert_eq!(fuck.row_echelon(), you);
 	}
@@ -711,87 +633,59 @@ use super::*;
 		assert_eq!(m.swap_rows(0, 1), expected);
 	}
 
-	// #[test]
-	// fn row_echelon() {
-	// 	let u = Matrix::from([
-	// 		[ 2.0, -1.0,  0.0],
-	// 		[-1.0,  2.0, -1.0],
-	// 		[ 0.0, -1.0,  2.0]
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[1.0, 0.0, 0.0],
-	// 		[0.0, 1.0, 0.0],
-	// 		[0.0, 0.0, 1.0]
-	// 	]);
-	// 	assert_eq!(u.row_echelon(), expected);
+	#[test]
+	fn row_echelon() {
+		let u = Matrix::from([
+			[ 2.0, -1.0,  0.0],
+			[-1.0,  2.0, -1.0],
+			[ 0.0, -1.0,  2.0]
+		]);
+		let expected = Matrix::from([
+			[1.0, 0.0, 0.0],
+			[0.0, 1.0, 0.0],
+			[0.0, 0.0, 1.0]
+		]);
+		assert_eq!(u.row_echelon(), expected);
 
-	// 	let u = Matrix::from([
-	// 		[1.0, 0.0, 0.0],
-	// 		[0.0, 1.0, 0.0],
-	// 		[0.0, 0.0, 1.0]
-	// 	]);
-	// 	assert_eq!(u.row_echelon(), u);
+		let u = Matrix::from([
+			[1.0, 0.0, 0.0],
+			[0.0, 1.0, 0.0],
+			[0.0, 0.0, 1.0]
+		]);
+		assert_eq!(u.row_echelon(), u);
 
-	// 	let u = Matrix::from([
-	// 		[1.0, 2.0],
-	// 		[3.0, 4.0]
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[1.0, 0.0],
-	// 		[0.0, 1.0]
-	// 	]);
-	// 	assert_eq!(u.row_echelon(), expected);
+		let u = Matrix::from([
+			[1.0, 2.0],
+			[3.0, 4.0]
+		]);
+		let expected = Matrix::from([
+			[1.0, 0.0],
+			[0.0, 1.0]
+		]);
+		assert_eq!(u.row_echelon(), expected);
 
-	// 	let u = Matrix::from([
-	// 		[1., 2.],
-	// 		[2., 4.],
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[1., 2.],
-	// 		[0., 0.],
-	// 	]);
-	// 	assert_eq!(u.row_echelon(), expected);
+		let u = Matrix::from([
+			[1., 2.],
+			[2., 4.],
+		]);
+		let expected = Matrix::from([
+			[1., 2.],
+			[0., 0.],
+		]);
+		assert_eq!(u.row_echelon(), expected);
 
-	// 	let u = Matrix::from([
-	// 		[8., 5.,  -2.,  4.,  28.],
-	// 		[4., 2.5,  20., 4., -4. ],
-	// 		[8., 5.,   1.,  4.,  17.],
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[1.0, 0.625, 0.0, 0.0, -12.1666667],
-	// 		[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
-	// 		[0.0, 0.0,   0.0, 1.0,  29.5      ],
-	// 	]);
-	// 	assert_eq!(u.row_echelon(), expected);
-
-	// 	// ====================================================================
-
-	// 	// let u = Matrix::from([
-	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
-	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
-	// 	// ]);
-	// 	// assert!(u.is_row_echelon());
-
-	// 	// let u = Matrix::from([
-	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
-	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
-	// 	// ]);
-	// 	// assert_ne!(u.is_row_echelon(), true);
-
-	// 	// let u = Matrix::from([
-	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
-	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
-	// 	// ]);
-	// 	// assert_ne!(u.is_row_echelon(), true);
-	// }
+		let u = Matrix::from([
+			[8., 5.,  -2.,  4.,  28.],
+			[4., 2.5,  20., 4., -4. ],
+			[8., 5.,   1.,  4.,  17.],
+		]);
+		let expected = Matrix::from([
+			[1.0, 0.625, 0.0, 0.0, -12.1666667],
+			[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
+			[0.0, 0.0,   0.0, 1.0,  29.5      ],
+		]);
+		// assert_eq!(u.row_echelon(), expected);
+		assert_matrices_approx_equal!(u.row_echelon(), expected, 0.000001);
+	}
 
 }
