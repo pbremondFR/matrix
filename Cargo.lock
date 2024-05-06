@@ -13,6 +13,7 @@ name = "matrix"
 version = "0.1.0"
 dependencies = [
  "num-traits",
+ "static_assertions",
 ]
 
 [[package]]
@@ -23,3 +24,9 @@ checksum = "da0df0e5185db44f69b44f26786fe401b6c293d1907744beaa7fa62b2e5a517a"
 dependencies = [
  "autocfg",
 ]
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"

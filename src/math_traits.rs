@@ -41,7 +41,7 @@ impl Mathable for f64 {
 	}
 }
 
-pub trait RealNumber: Mathable {}
+pub trait RealNumber: Mathable + PartialOrd {}
 impl RealNumber for f32 {}
 impl RealNumber for f64 {}
 

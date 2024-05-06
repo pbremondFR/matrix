@@ -145,11 +145,23 @@ impl<const N: usize, K: Mathable> ops::Add<Vector<N, K>> for Vector<N, K> {
 	}
 }
 
+impl<const N: usize, K: Mathable> ops::AddAssign<Vector<N, K>> for Vector<N, K> {
+	fn add_assign(&mut self, rhs: Self) {
+		*self = *self + rhs;
+	}
+}
+
 impl<const N: usize, K: Mathable> ops::Sub<Vector<N, K>> for Vector<N, K> {
 	type Output = Self;
 
 	fn sub(self, rhs: Self) -> Self {
 		self + -rhs
+	}
+}
+
+impl<const N: usize, K: Mathable> ops::SubAssign<Vector<N, K>> for Vector<N, K> {
+	fn sub_assign(&mut self, rhs: Self) {
+		*self = *self - rhs;
 	}
 }
 
@@ -166,17 +178,37 @@ where
 	}
 }
 
+impl<const N: usize, K, T> ops::MulAssign<T> for Vector<N, K>
+where
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
+{
+	fn mul_assign(&mut self, rhs: T) {
+		*self = *self * rhs;
+	}
+}
+
 impl<const N: usize, K, T> ops::Div<T> for Vector<N, K>
 where
 	K: Mathable + ops::Div<T, Output = K>,
 	T: Mathable
 {
-    type Output = Self;
+	type Output = Self;
 
-    fn div(self, rhs: T) -> Self::Output {
+	fn div(self, rhs: T) -> Self::Output {
 		let res: Vec<K> = self.data.iter().map(|&v| v / rhs).collect();
-        Self::from_slice(&res)
-    }
+		Self::from_slice(&res)
+	}
+}
+
+impl<const N: usize, K, T> ops::DivAssign<T> for Vector<N, K>
+where
+	K: Mathable + ops::Div<T, Output = K>,
+	T: Mathable
+{
+	fn div_assign(&mut self, rhs: T) {
+		*self = *self / rhs;
+	}
 }
 
 impl<const N: usize, K: Mathable> ops::Neg for Vector<N, K> {
@@ -231,6 +263,23 @@ use super::*;
 		assert!(bar == vector!(2., 2.));
 		let bar = bar * 0.;
 		assert!(bar == vector!(0., 0.));
+	}
+
+	#[test]
+	fn ops_assign() {
+		let mut a = vector!(1.0, 2.0, 3.0);
+		a *= 2.0;
+		assert_eq!(a, vector!(2.0, 4.0, 6.0));
+
+		a /= 2.0;
+		assert_eq!(a, vector!(1.0, 2.0, 3.0));
+
+		let mut a = vector!(1.0, 2.0, 3.0);
+		a += a;
+		assert_eq!(a, vector!(2.0, 4.0, 6.0));
+
+		a -= a;
+		assert_eq!(a, vector!(0.0, 0.0, 0.0));
 	}
 
 	#[test]

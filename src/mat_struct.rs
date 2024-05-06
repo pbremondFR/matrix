@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{funcs::linear_combination, math_traits::Mathable, Vector};
+use crate::{funcs::linear_combination, math_traits::{Mathable, RealNumber}, Vector};
 use std::{fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
@@ -60,8 +60,9 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		self[m]
 	}
 
-	pub fn set_row(&mut self, m: usize, vec: Vector<N, K>) {
+	pub fn set_row(&mut self, m: usize, vec: Vector<N, K>) -> Self {
 		self[m] = vec;
+		*self
 	}
 
 	pub fn get_column(self, n: usize) -> Vector<M, K> {
@@ -72,10 +73,11 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		res
 	}
 
-	pub fn set_column(&mut self, n: usize, vec: Vector<M, K>) {
+	pub fn set_column(&mut self, n: usize, vec: Vector<M, K>) -> Self {
 		for i in 0..M {
 			self[n][i] = vec[i];
 		}
+		*self
 	}
 
 	pub fn transpose(&self) -> Matrix<N, M, K> {
@@ -100,6 +102,149 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 			pivot = new_pivot;
 		}
 		return true;
+	}
+
+	fn swap_rows(&mut self, a_idx: usize, b_idx: usize) -> Self {
+		assert!(a_idx < M && b_idx < N,
+			"a_idx: {a_idx}, M: {M}, b_idx: {b_idx}, N: {N}");
+
+		let tmp = self.get_row(a_idx);
+		self.set_row(a_idx, self.get_row(b_idx));
+		self.set_row(b_idx, tmp);
+		*self
+	}
+
+	// pub fn row_echelon(&self) -> Matrix<M, N, K>
+	// where K: RealNumber
+	// {
+	// 	let get_max_idx = |col: &[K], start_idx: usize| -> usize {
+	// 		let mut max_idx = start_idx;
+	// 		let mut max_val = K::zero();
+	// 		for (idx, val) in col.iter().enumerate() {
+	// 			if val.abs() > max_val {
+	// 				max_idx = idx;
+	// 				max_val = *val;
+	// 			}
+	// 		}
+	// 		max_idx
+	// 	};
+
+	// 	let mut res = self.clone();
+	// 	for i in 0..M {
+	// 		for j in 0..N {
+	// 			let max_idx = get_max_idx(res.get_column(i).as_slice(), i);
+	// 			if res[i][j] == K::zero() && max_idx != i {
+	// 				res.swap_rows(i, max_idx);
+	// 			}
+	// 			if res[i][j] == K::zero() && max_idx == i {
+	// 				continue;
+	// 			}
+	// 			if res[i][j] != K::zero() {
+	// 				for k in i + 1..M {
+	// 					let factor = res[i][j] / res[k][j];
+	// 					res[k] = res[k] - res[k] * factor;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// 	res
+	// }
+
+	// pub fn row_echelon(&self) -> Matrix<M, N, K> where K: RealNumber {
+
+	// 	let get_max_idx = |col: &[K], start_idx: usize| -> usize {
+	// 		let mut max_idx = start_idx;
+	// 		let mut max_val = K::zero();
+	// 		for (idx, val) in col.iter().enumerate() {
+	// 			if val.abs() > max_val {
+	// 				max_idx = idx;
+	// 				max_val = *val;
+	// 			}
+	// 		}
+	// 		max_idx
+	// 	};
+
+	// 	let get_first_non_zero = |col: &[K], start_idx: usize| -> usize {
+	// 		for (idx, val) in col.iter().enumerate() {
+	// 			if *val != K::zero() {
+	// 				return idx;
+	// 			}
+	// 		}
+	// 		return start_idx;
+	// 	};
+
+	// 	let mut res = self.clone();
+	// 	for mut i in 0..M {
+	// 		for j in i..N {
+	// 			// Identify the first non-zero row in the matrix
+	// 			let column = res.get_column(j);
+	// 			let max_idx = get_first_non_zero(column.as_slice(), i);
+	// 			i = max_idx;
+	// 			if res[max_idx][j] == K::zero() {
+	// 				continue;
+	// 			} else {
+	// 				res[i] = res[i] / res[i][j];
+	// 				for k in i + 1..M {
+	// 					res[k] = res[k] - (res[i] * res[k][j]);
+	// 				}
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+	// 	res
+	// }
+
+	pub fn row_echelon(&self) -> Self where K: RealNumber {
+		let find_pivot = |column: &[K], start_idx: usize| -> usize {
+			let mut max_idx = start_idx;
+			let mut max_val = K::zero();
+			for (idx, val) in column.iter().enumerate() {
+				if val.abs() >= max_val {
+					max_val = val.abs();
+					max_idx = idx;
+				}
+			}
+			max_idx
+		};
+
+		let find_first_non_zero = |col: &[K], start_idx: usize| {
+			for i in start_idx..col.len() {
+				if col[i] != K::zero() {
+					return i;
+				}
+			}
+			start_idx
+		};
+
+		let mut res = self.clone();
+		let mut i: usize = 0;
+		let mut j: usize = 0;
+		while i < M && j < N {
+			let pivot = find_first_non_zero(res.get_column(j).as_slice(), i);
+			if res[pivot][j] == K::zero() {
+				j += 1;
+			} else {
+				if pivot != i {
+					res.swap_rows(pivot, i);
+				}
+				let coef = res[i][j];
+				res[i] /= coef;
+				for k in 0..M {
+					if res[k][j] == K::zero() || k == i {
+						continue;
+					}
+					let diff = res[i] * res[k][j];
+					res[k] -= diff;
+				}
+				// for k in pivot + 1..M {
+				// 	let diff = res[i] * res[k][j];
+				// 	res[k] -= diff;
+				// }
+				i += 1;
+				j += 1;
+			}
+		}
+		res
 	}
 }
 
@@ -260,6 +405,36 @@ mod tests {
 	use crate::vector;
 
 use super::*;
+
+	#[test]
+	fn sucka_ma_balls() {
+		let fuck = Matrix::from([
+			[0.0, 1.0, 2.0, 4.0,  5.0],
+			[0.0, 2.0, 3.0, 5.0,  7.0],
+			[2.0, 4.0, 4.0, 2.0,  0.0],
+			[3.0, 7.0, 9.0, 11.0, 13.0]
+		]);
+		let you = Matrix::from([
+			[1.0, 0.0, 0.0, 0.0,  1.0],
+			[0.0, 1.0, 0.0, 0.0,  9.0],
+			[0.0, 0.0, 1.0, 0.0, -12.0],
+			[0.0, 0.0, 0.0, 1.0,  5.0]
+		]);
+		assert_eq!(fuck.row_echelon(), you);
+
+
+		let fuck = Matrix::from([
+			[3.0, 4.0, 9.0],
+			[2.0, 5.0, 1.0],
+			[9.0, 12.0, 27.0]
+		]);
+		let you = Matrix::from([
+			[1.0, 4.0/3.0, 3.0     ],
+			[0.0, 1.0,     15.0/7.0],
+			[0.0, 0.0,     0.0     ]
+		]);
+		assert_eq!(fuck.row_echelon(), you);
+	}
 
 	#[test]
 	fn test_add() {
@@ -522,4 +697,101 @@ use super::*;
 		]);
 		assert_ne!(u.is_row_echelon(), true);
 	}
+
+	#[test]
+	fn swap_rows() {
+		let mut m = Matrix::from([
+			[1.0, 2.0],
+			[3.0, 4.0],
+		]);
+		let expected = Matrix::from([
+			[3.0, 4.0],
+			[1.0, 2.0],
+		]);
+		assert_eq!(m.swap_rows(0, 1), expected);
+	}
+
+	// #[test]
+	// fn row_echelon() {
+	// 	let u = Matrix::from([
+	// 		[ 2.0, -1.0,  0.0],
+	// 		[-1.0,  2.0, -1.0],
+	// 		[ 0.0, -1.0,  2.0]
+	// 	]);
+	// 	let expected = Matrix::from([
+	// 		[1.0, 0.0, 0.0],
+	// 		[0.0, 1.0, 0.0],
+	// 		[0.0, 0.0, 1.0]
+	// 	]);
+	// 	assert_eq!(u.row_echelon(), expected);
+
+	// 	let u = Matrix::from([
+	// 		[1.0, 0.0, 0.0],
+	// 		[0.0, 1.0, 0.0],
+	// 		[0.0, 0.0, 1.0]
+	// 	]);
+	// 	assert_eq!(u.row_echelon(), u);
+
+	// 	let u = Matrix::from([
+	// 		[1.0, 2.0],
+	// 		[3.0, 4.0]
+	// 	]);
+	// 	let expected = Matrix::from([
+	// 		[1.0, 0.0],
+	// 		[0.0, 1.0]
+	// 	]);
+	// 	assert_eq!(u.row_echelon(), expected);
+
+	// 	let u = Matrix::from([
+	// 		[1., 2.],
+	// 		[2., 4.],
+	// 	]);
+	// 	let expected = Matrix::from([
+	// 		[1., 2.],
+	// 		[0., 0.],
+	// 	]);
+	// 	assert_eq!(u.row_echelon(), expected);
+
+	// 	let u = Matrix::from([
+	// 		[8., 5.,  -2.,  4.,  28.],
+	// 		[4., 2.5,  20., 4., -4. ],
+	// 		[8., 5.,   1.,  4.,  17.],
+	// 	]);
+	// 	let expected = Matrix::from([
+	// 		[1.0, 0.625, 0.0, 0.0, -12.1666667],
+	// 		[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
+	// 		[0.0, 0.0,   0.0, 1.0,  29.5      ],
+	// 	]);
+	// 	assert_eq!(u.row_echelon(), expected);
+
+	// 	// ====================================================================
+
+	// 	// let u = Matrix::from([
+	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
+	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
+	// 	// ]);
+	// 	// assert!(u.is_row_echelon());
+
+	// 	// let u = Matrix::from([
+	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
+	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
+	// 	// ]);
+	// 	// assert_ne!(u.is_row_echelon(), true);
+
+	// 	// let u = Matrix::from([
+	// 	// 	[1.0, 2.0, 3.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 2.0, 4.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 1.0, 5.0],
+	// 	// 	[0.0, 0.0, 0.0, 0.0, 0.0],
+	// 	// ]);
+	// 	// assert_ne!(u.is_row_echelon(), true);
+	// }
+
 }
