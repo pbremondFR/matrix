@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{funcs::linear_combination, math_traits::{Mathable, RealNumber}, Vector};
+use crate::{funcs::linear_combination, math_traits::{Determinant, Mathable, RealNumber}, Vector};
 use std::{fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
@@ -156,6 +156,24 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		}
 		res
 	}
+
+	pub fn submatrix(&self, rm_row: usize, rm_col: usize) -> Matrix<{M - 1}, {N - 1}, K> {
+		if rm_row >= M || rm_col >= N {
+			panic!("submatrix: index out-of-bounds: Matrix size is {M}x{N}, rm_row: {rm_row}, \
+				 rm_col: {rm_col}");
+		}
+		let mut res = Matrix::<{M - 1}, {N - 1}, K>::default();
+		let mut i: usize = 0;
+		for (_, vec) in self.data.iter().enumerate().filter(|(idx,_)| *idx != rm_row) {
+			let mut j: usize = 0;
+			for (_, val) in vec.as_slice().iter().enumerate().filter(|(idx,_)| *idx != rm_col) {
+				res[i][j] = *val;
+				j += 1;
+			}
+			i += 1;
+		}
+		res
+	}
 }
 
 impl<const M: usize, K: Mathable> Matrix<M, M, K> {
@@ -168,13 +186,22 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 	}
 }
 
-impl<K: Mathable> Matrix<1, 1, K> {
+impl<const N: usize, K: Mathable> Determinant<N, K> for Matrix<N, N, K> {
+	default fn det(&self) -> K {
+		println!("default");
+
+		K::zero()
+	}
+}
+
+impl<K: Mathable> Determinant<1, K> for Matrix<1, 1, K> {
 	fn det(&self) -> K {
+		println!("1x1");
 		self[0][0]
 	}
 }
 
-impl<K: Mathable> Matrix<2, 2, K> {
+impl<K: Mathable> Determinant<2, K> for Matrix<2, 2, K> {
 	fn det(&self) -> K {
 		/*
 		 * |a b|
@@ -182,11 +209,12 @@ impl<K: Mathable> Matrix<2, 2, K> {
 		 *
 		 * ad - bc
 		 */
+		println!("2x2");
 		self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
 	}
 }
 
-impl<K: Mathable> Matrix<3, 3, K> {
+impl<K: Mathable> Determinant<3, K> for Matrix<3, 3, K> {
 	fn det(&self) -> K {
 		/*
 		 * |a b c|
@@ -206,8 +234,8 @@ impl<K: Mathable> Matrix<3, 3, K> {
 
 // Brainless hard-coded thing. TODO: stop plagiarizing Unreal Engine
 // Maybe make an N-sized implementation to flex, if that's not too hard?
-impl<K: Mathable> Matrix<4, 4, K> {
-	pub fn det(&self) -> K {
+impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
+	fn det(&self) -> K {
 		let temp0 = self[2][2].mul_add(self[3][3], -self[2][3] * self[3][2]);
 		let temp1 = self[1][2].mul_add(self[3][3], -self[1][3] * self[3][2]);
 		let temp2 = self[1][2].mul_add(self[2][3], -self[1][3] * self[2][2]);
@@ -776,4 +804,61 @@ mod tests {
 		assert_eq!(u.det(), 1032.0);
 	}
 
+	#[test]
+	fn submatrix() {
+		let u = Matrix::from([
+			[1., 2., 3.],
+			[4., 5., 6.],
+			[7., 8., 9.],
+		]);
+		let expected = Matrix::from([
+			[5., 6.],
+			[8., 9.],
+		]);
+		assert_eq!(u.submatrix(0, 0), expected);
+
+		let u = Matrix::from([
+			[1., 2., 3.],
+			[4., 5., 6.],
+			[7., 8., 9.],
+		]);
+		let expected = Matrix::from([
+			[1., 2.],
+			[4., 5.],
+		]);
+		assert_eq!(u.submatrix(2, 2), expected);
+
+		let u = Matrix::from([
+			[1., 2., 3.],
+			[4., 5., 6.],
+			[7., 8., 9.],
+		]);
+		let expected = Matrix::from([
+			[1., 3.],
+			[7., 9.],
+		]);
+		assert_eq!(u.submatrix(1, 1), expected);
+
+		let u = Matrix::from([
+			[1., 2., 3.],
+			[4., 5., 6.],
+			[7., 8., 9.],
+		]);
+		let expected = Matrix::from([
+			[2., 3.],
+			[5., 6.],
+		]);
+		assert_eq!(u.submatrix(2, 0), expected);
+	}
+
+	#[test]
+	#[should_panic]
+	fn submatrix_panic() {
+		let u = Matrix::from([
+			[1., 2., 3.],
+			[4., 5., 6.],
+			[7., 8., 9.],
+		]);
+		u.submatrix(3, 0);
+	}
 }

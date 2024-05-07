@@ -90,6 +90,10 @@ pub trait AngleCos<T> {
 	fn angle_cos(self, v: &Self) -> T;
 }
 
+pub trait Determinant<const N: usize, K: Mathable> {
+	fn det(&self) -> K;
+}
+
 #[cfg(test)]
 mod tests {
 	use crate::{macros::assert_approx_eq, vector};

@@ -1,5 +1,6 @@
 #![feature(min_specialization)]
 #![feature(associated_type_defaults)]
+#![feature(generic_const_exprs)]
 mod math_traits;
 mod mat_struct;
 mod vec_struct;
@@ -8,6 +9,7 @@ mod macros;
 
 use vec_struct::*;
 use mat_struct::*;
+use math_traits::*;
 
 // use crate::math_traits::Mathable;
 
@@ -15,30 +17,22 @@ fn main() {
 	println!("Hello, world!");
 
 	{
-		let foo: Vec<f32> = vec![21., 42.];
-		let bar: Vec<f32> = foo.iter().map(|x| -x).collect();
-
-		println!("{foo:?}\n{bar:?}");
-	}
-	{
-		let mut foo = Vector::<3>::new();
-		let mut bar = Matrix::<3, 3>::new();
-
-		foo[1] = 1.;
-		bar[0][0] = 42.;
-
-		println!("{}", foo);
-		println!("{}", bar);
-	}
-	{
-		let foo = Vec3::from([0., 1., 2.]);
-		let bar = Mat3::from([
-			[1., 0., 0.],
-			[0., 2., 0.],
-			[0., 0., 3.],
+		let u = Matrix::from([
+			[ 1.]
 		]);
+		let _ = u.det();
 
-		println!("{}", foo);
-		println!("{}", bar);
+		let u = Matrix::from([
+			[ 1., -1.],
+			[-1., 1.],
+		]);
+		let _ = u.det();
+
+		let u = Matrix::from([
+			[2., 0., 0.],
+			[0., 2., 0.],
+			[0., 0., 2.],
+		]);
+		let _ = u.det();
 	}
 }
