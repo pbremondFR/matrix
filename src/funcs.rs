@@ -1,4 +1,4 @@
-use crate::{math_traits::*, vec_struct::*, Matrix};
+use crate::{math_traits::*, vec_struct::*};
 
 pub fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
 {

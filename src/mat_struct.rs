@@ -114,6 +114,11 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		*self
 	}
 
+	/*
+	 * Uses Gauss-Jordan elimination to obtain the (reduced?) row-echelon form of a given matrix.
+	 * I lost almost a day because some stupid website gave me wrong results for calculating this...
+	 * Great video: https://www.youtube.com/watch?v=PTii4TBh9kQ
+	 */
 	pub fn row_echelon(&self) -> Self where K: RealNumber {
 
 		let find_first_non_zero = |col: &[K], start_idx: usize| {
@@ -160,6 +165,60 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 			res += self[i][i];
 		}
 		res
+	}
+}
+
+impl<K: Mathable> Matrix<1, 1, K> {
+	fn det(&self) -> K {
+		self[0][0]
+	}
+}
+
+impl<K: Mathable> Matrix<2, 2, K> {
+	fn det(&self) -> K {
+		/*
+		 * |a b|
+		 * |c d|
+		 *
+		 * ad - bc
+		 */
+		self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
+	}
+}
+
+impl<K: Mathable> Matrix<3, 3, K> {
+	fn det(&self) -> K {
+		/*
+		 * |a b c|
+		 * |d e f|
+		 * |g h i|
+		 *
+		 * aei + bfg + cdh - ceg - bdi - afh
+		 */
+		self[0][0] * self[1][1] * self[2][2]	// aei
+		+ self[0][1] * self[1][2] * self[2][0]	// bfg
+		+ self[0][2] * self[1][0] * self[2][1]	// cdh
+		- self[0][2] * self[1][1] * self[2][0]	// ceg
+		- self[0][1] * self[1][0] * self[2][2]	// bdi
+		- self[0][0] * self[1][2] * self[2][1]	// afh
+	}
+}
+
+// Brainless hard-coded thing. TODO: stop plagiarizing Unreal Engine
+// Maybe make an N-sized implementation to flex, if that's not too hard?
+impl<K: Mathable> Matrix<4, 4, K> {
+	pub fn det(&self) -> K {
+		let temp0 = self[2][2].mul_add(self[3][3], -self[2][3] * self[3][2]);
+		let temp1 = self[1][2].mul_add(self[3][3], -self[1][3] * self[3][2]);
+		let temp2 = self[1][2].mul_add(self[2][3], -self[1][3] * self[2][2]);
+		let temp3 = self[0][2].mul_add(self[3][3], -self[0][3] * self[3][2]);
+		let temp4 = self[0][2].mul_add(self[2][3], -self[0][3] * self[2][2]);
+		let temp5 = self[0][2].mul_add(self[1][3], -self[0][3] * self[1][2]);
+
+		self[0][0] * (self[1][1] * temp0 - self[2][1] * temp1 + self[3][1] * temp2)
+		- self[1][0] * (self[0][1] * temp0 - self[2][1] * temp3 + self[3][1] * temp4)
+		+ self[2][0] * (self[0][1] * temp1 - self[1][1] * temp3 + self[3][1] * temp5)
+		- self[3][0] * (self[0][1] * temp2 - self[1][1] * temp4 + self[2][1] * temp5)
 	}
 }
 
@@ -343,7 +402,6 @@ mod tests {
 			[0.0, 0.0, 0.0, 1.0,  5.0]
 		]);
 		assert_eq!(fuck.row_echelon(), you);
-
 
 		let fuck = Matrix::from([
 			[3.0, 4.0, 9.0],
@@ -684,8 +742,38 @@ mod tests {
 			[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
 			[0.0, 0.0,   0.0, 1.0,  29.5      ],
 		]);
-		// assert_eq!(u.row_echelon(), expected);
 		assert_matrices_approx_equal!(u.row_echelon(), expected, 0.000001);
+	}
+
+	#[test]
+	fn determinant() {
+		let u = Matrix::from([
+			[ 1., -1.],
+			[-1., 1.],
+		]);
+		assert_eq!(u.det(), 0.0);
+
+		let u = Matrix::from([
+			[2., 0., 0.],
+			[0., 2., 0.],
+			[0., 0., 2.],
+		]);
+		assert_eq!(u.det(), 8.0);
+
+		let u = Matrix::from([
+			[8., 5., -2.],
+			[4., 7., 20.],
+			[7., 6., 1.],
+		]);
+		assert_eq!(u.det(), -174.0);
+
+		let u = Matrix::from([
+			[ 8., 5., -2., 4.],
+			[ 4., 2.5, 20., 4.],
+			[ 8., 5., 1., 4.],
+			[28., -4., 17., 1.],
+		]);
+		assert_eq!(u.det(), 1032.0);
 	}
 
 }
