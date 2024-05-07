@@ -121,6 +121,11 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 	 */
 	pub fn row_echelon(&self) -> Self where K: RealNumber {
 
+		/*
+		 * I can either get the first non-zero pivot, or the biggest abs() one.
+		 * Wikipedia claims that the max abs() is the most numerically stable, but my small
+		 * tests don't really corroborate that.
+		 */
 		let find_first_non_zero = |col: &[K], start_idx: usize| {
 			for i in start_idx..col.len() {
 				if col[i] != K::zero() {
@@ -128,6 +133,17 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 				}
 			}
 			start_idx
+		};
+
+		let find_max_pivot = |col: &[K], start_idx: usize| -> usize {
+			let (mut max_val, mut max_idx) = (K::zero(), start_idx);
+			for (idx, val) in col.iter().enumerate().skip(start_idx) {
+				if val.abs() > max_val {
+					max_val = *val;
+					max_idx = idx;
+				}
+			}
+			max_idx
 		};
 
 		let mut res = self.clone();
@@ -378,7 +394,7 @@ impl<const M: usize, const N: usize, K: Mathable> ops::Neg for Matrix<M, N, K> {
 }
 
 // Looks like it also implements the to_string trait?
-impl<const M: usize, const N: usize> fmt::Display for Matrix<M, N> {
+impl<const M: usize, const N: usize, K: Mathable + fmt::Display> fmt::Display for Matrix<M, N, K> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let mut output = String::new();
 		for i in 0..self.data.len() {
@@ -429,7 +445,7 @@ mod tests {
 			[0.0, 0.0, 1.0, 0.0, -12.0],
 			[0.0, 0.0, 0.0, 1.0,  5.0]
 		]);
-		assert_eq!(fuck.row_echelon(), you);
+		assert_matrices_approx_equal!(fuck.row_echelon(), you, f32::EPSILON);
 
 		let fuck = Matrix::from([
 			[3.0, 4.0, 9.0],
@@ -770,7 +786,19 @@ mod tests {
 			[0.0, 0.0,   1.0, 0.0, -3.6666667 ],
 			[0.0, 0.0,   0.0, 1.0,  29.5      ],
 		]);
-		assert_matrices_approx_equal!(u.row_echelon(), expected, 0.000001);
+		assert_matrices_approx_equal!(u.row_echelon(), expected, 0.0000001);
+
+		let u = Matrix::from([
+			[ 2.0, -1.0,  0.0],
+			[ 0.0, -1.0,  2.0],
+			[-1.0,  2.0, -1.0],
+		]);
+		let expected = Matrix::from([
+			[1.0, 0.0, 0.0],
+			[0.0, 1.0, 0.0],
+			[0.0, 0.0, 1.0]
+		]);
+		assert_eq!(u.row_echelon(), expected);
 	}
 
 	#[test]
@@ -778,6 +806,12 @@ mod tests {
 		let u = Matrix::from([
 			[ 1., -1.],
 			[-1., 1.],
+		]);
+		assert_eq!(u.det(), 0.0);
+
+		let u = Matrix::from([
+			[4., 2.],
+			[2., 1.],
 		]);
 		assert_eq!(u.det(), 0.0);
 

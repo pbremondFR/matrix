@@ -221,7 +221,7 @@ impl<const N: usize, K: Mathable> ops::Neg for Vector<N, K> {
 }
 
 // Looks like it also implements the to_string trait?
-impl<const N: usize> fmt::Display for Vector<N> {
+impl<const N: usize, K: Mathable + fmt::Display> fmt::Display for Vector<N, K> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let mut output = String::new();
 		for i in 0..self.data.len() {
