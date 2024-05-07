@@ -4,7 +4,7 @@ use crate::{Matrix, Vector};
 
 pub trait Mathable: Copy + Signed + NumAssignOps + Default {
 	fn mul_add(self, a: Self, b: Self) -> Self {
-		self * a + b
+		(self * a) + b
 	}
 	fn abs(self) -> Self;
 	fn max(self, other: Self) -> Self;

@@ -202,6 +202,10 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 	}
 }
 
+/*
+ * Default implementation of determinant calculation using Gauss-Jordan elimination.
+ * Faster specializations for 1x1, 2x2, 3x3 and 4x4 matrices are defined below.
+ */
 impl<const N: usize, K: Mathable> Determinant<N, K> for Matrix<N, N, K> {
 	default fn det(&self) -> K {
 		/*
@@ -262,7 +266,12 @@ impl<K: Mathable> Determinant<2, K> for Matrix<2, 2, K> {
 		 *
 		 * ad - bc
 		 */
-		self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
+
+		// Bencharmking this vs a "normal" multiplication reveals mul_add is
+		// INCREDIBLY slower! Two orders of magnitude! 430ps vs 4ns on my Ryzen 7 5700X
+
+		// self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
+		self[0][0] * self[1][1] - self[0][1] * self[1][0]
 	}
 }
 
@@ -288,12 +297,12 @@ impl<K: Mathable> Determinant<3, K> for Matrix<3, 3, K> {
 // Maybe make an N-sized implementation to flex, if that's not too hard?
 impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
 	fn det(&self) -> K {
-		let temp0 = self[2][2].mul_add(self[3][3], -self[2][3] * self[3][2]);
-		let temp1 = self[1][2].mul_add(self[3][3], -self[1][3] * self[3][2]);
-		let temp2 = self[1][2].mul_add(self[2][3], -self[1][3] * self[2][2]);
-		let temp3 = self[0][2].mul_add(self[3][3], -self[0][3] * self[3][2]);
-		let temp4 = self[0][2].mul_add(self[2][3], -self[0][3] * self[2][2]);
-		let temp5 = self[0][2].mul_add(self[1][3], -self[0][3] * self[1][2]);
+		let temp0 = self[2][2] * self[3][3] - self[2][3] * self[3][2];
+		let temp1 = self[1][2] * self[3][3] - self[1][3] * self[3][2];
+		let temp2 = self[1][2] * self[2][3] - self[1][3] * self[2][2];
+		let temp3 = self[0][2] * self[3][3] - self[0][3] * self[3][2];
+		let temp4 = self[0][2] * self[2][3] - self[0][3] * self[2][2];
+		let temp5 = self[0][2] * self[1][3] - self[0][3] * self[1][2];
 
 		self[0][0] * (self[1][1] * temp0 - self[2][1] * temp1 + self[3][1] * temp2)
 		- self[1][0] * (self[0][1] * temp0 - self[2][1] * temp3 + self[3][1] * temp4)
@@ -940,5 +949,24 @@ mod tests {
 			[7., 8., 9.],
 		]);
 		u.submatrix(3, 0);
+	}
+
+	extern crate test;
+	use test::Bencher;
+	use rand::distributions::{Distribution, Uniform};
+	#[bench]
+	fn benchmark_det(b: &mut Bencher) {
+		let mut rng = rand::thread_rng();
+		let die = Uniform::from(-200.0_f32..200.0_f32);
+		let u = Matrix::from([
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+		]);
+		b.iter(|| {
+			let n = test::black_box(42);	// Trick compiler into not optimizing everything away
+			u.det()
+		})
 	}
 }
