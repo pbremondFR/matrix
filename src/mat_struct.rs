@@ -204,15 +204,52 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 
 impl<const N: usize, K: Mathable> Determinant<N, K> for Matrix<N, N, K> {
 	default fn det(&self) -> K {
-		println!("default");
+		/*
+		 * Using first non-zero instead of greatest abs() because complex numbers don't
+		 * have one definitive way to order/compare them
+		 */
+		 let find_first_non_zero = |col: &[K], start_idx: usize| {
+			for i in start_idx..col.len() {
+				if col[i] != K::zero() {
+					return i;
+				}
+			}
+			start_idx
+		};
 
-		K::zero()
+		/*
+		 * Use Gauss-Jordan here too: https://fr.wikipedia.org/wiki/%C3%89limination_de_Gauss-Jordan#D%C3%A9terminant
+		 * det(A) = (-1)^p * n∏j=1 (A[k,j])
+		 */
+		let mut product = K::one();
+		let mut row_swap_factor = K::one();
+		let mut tmp = self.clone();
+		let mut i: usize = 0;
+		while i < N {
+			let pivot = find_first_non_zero(tmp.get_column(i).as_slice(), i);
+			if pivot != i {
+				tmp.swap_rows(pivot, i);
+				row_swap_factor = -row_swap_factor;
+			}
+			product *= tmp[i][i];
+			let coef = tmp[i][i];
+			tmp[i] /= coef;
+			for k in 0..N {
+				if tmp[k][i] == K::zero() || k == i {
+					continue;
+				}
+				let diff = tmp[i] * tmp[k][i];
+				tmp[k] -= diff;
+			}
+			i += 1;
+		}
+		return row_swap_factor * product;
+
 	}
 }
 
 impl<K: Mathable> Determinant<1, K> for Matrix<1, 1, K> {
 	fn det(&self) -> K {
-		println!("1x1");
 		self[0][0]
 	}
 }
@@ -225,7 +262,6 @@ impl<K: Mathable> Determinant<2, K> for Matrix<2, 2, K> {
 		 *
 		 * ad - bc
 		 */
-		println!("2x2");
 		self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
 	}
 }
@@ -410,7 +446,7 @@ impl<const M: usize, const N: usize, K: Mathable + fmt::Display> fmt::Display fo
 
 #[cfg(test)]
 mod tests {
-	use crate::vector;
+	use crate::{macros::assert_approx_eq, vector};
 	use super::*;
 
 	macro_rules! assert_matrices_approx_equal {
@@ -836,6 +872,16 @@ mod tests {
 			[28., -4., 17., 1.],
 		]);
 		assert_eq!(u.det(), 1032.0);
+
+		let u = Matrix::from([
+			[ 18.0,  3.0,  11.0, -11.0, -10.0, -7.0],
+			[ -3.0,  2.0, -11.0, -19.0, -16.0, -5.0],
+			[ 16.0, 14.0,   9.0,   0.0,   2.0, 15.0],
+			[-14.0,  8.0,  -5.0, -12.0, -11.0, 19.0],
+			[ -7.0, 10.0,   9.0,  11.0,  12.0, 16.0],
+			[-14.0, 14.0,   0.0,  -5.0,  -8.0,  3.0],
+		]);
+		assert_approx_eq!(u.det(), 9916537.0, 0.00000001);
 	}
 
 	#[test]
