@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+#![allow(unused_macros)]
+#![allow(unused_imports)]
 
 use std::{fmt, ops::{self}};
 
@@ -90,8 +92,9 @@ where K: Mathable + RealNumber
 	}
 }
 
-// Demonstration on how to specialize an impl so that I have sort of like SFNIAE but worse
-// For testing, and bonuses I guess, even though I might not make them at all...
+// // Demonstration on how to specialize an impl so that I have sort of like SFNIAE but worse
+// // For testing, and bonuses I guess, even though I might not make them at all...
+// // TODO: Bonuses
 // impl<const N: usize, T: Mathable> Norm<T> for Vector<N, ComplexNum<T>>
 // {
 // 	fn norm_1(self) -> T {
@@ -105,6 +108,10 @@ where K: Mathable + RealNumber
 // 	}
 // }
 
+pub trait AngleCos<T> {
+	fn angle_cos(self, v: &Self) -> T;
+}
+
 impl<const N: usize, T> AngleCos<T> for Vector<N, T>
 where T: Mathable + RealNumber
 {
@@ -112,6 +119,15 @@ where T: Mathable + RealNumber
 		self.dot(v) / (self.norm() * v.norm())
 	}
 }
+
+// // TODO: Bonuses
+// impl<const N: usize, T> AngleCos<T> for Vector<N, Complex<T>>
+// where T: Mathable + RealNumber
+// {
+// 	fn angle_cos(self, v: &Self) -> T {
+// 		todo!()
+// 	}
+// }
 
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	type Output = K;

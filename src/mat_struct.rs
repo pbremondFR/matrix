@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{funcs::linear_combination, math_traits::{Determinant, Mathable, RealNumber}, Vector};
+use crate::{math_traits::{Mathable, RealNumber}, Vector};
 use std::{fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
@@ -202,6 +202,10 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 	}
 }
 
+pub trait Determinant<const N: usize, K: Mathable> {
+	fn det(&self) -> K;
+}
+
 /*
  * Default implementation of determinant calculation using Gauss-Jordan elimination.
  * Faster specializations for 1x1, 2x2, 3x3 and 4x4 matrices are defined below.
@@ -224,6 +228,8 @@ impl<const N: usize, K: Mathable> Determinant<N, K> for Matrix<N, N, K> {
 		/*
 		 * Use Gauss-Jordan here too: https://fr.wikipedia.org/wiki/%C3%89limination_de_Gauss-Jordan#D%C3%A9terminant
 		 * det(A) = (-1)^p * n∏j=1 (A[k,j])
+		 * I wanted to try submatrices, but Rust will NOT let me use them for some reason.
+		 * Has got something to do with generic parameters. I can do this in C++. I miss C++.
 		 */
 		let mut product = K::one();
 		let mut row_swap_factor = K::one();
@@ -268,7 +274,7 @@ impl<K: Mathable> Determinant<2, K> for Matrix<2, 2, K> {
 		 */
 
 		// Bencharmking this vs a "normal" multiplication reveals mul_add is
-		// INCREDIBLY slower! Two orders of magnitude! 430ps vs 4ns on my Ryzen 7 5700X
+		// INCREDIBLY slower! One order of magnitude! 430ps vs 4ns on my Ryzen 7 5700X
 
 		// self[0][0].mul_add(self[1][1], -self[0][1] * self[1][0])
 		self[0][0] * self[1][1] - self[0][1] * self[1][0]

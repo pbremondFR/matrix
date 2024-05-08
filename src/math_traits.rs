@@ -13,6 +13,9 @@ pub trait Mathable: Copy + Signed + NumAssignOps + Default {
 
 impl Mathable for f32 {
 	fn mul_add(self, a: Self, b: Self) -> Self {
+		// Holy shit performance from this is LITERALLY 100 times worse. Just let the
+		// compiler call the fused multiply-accumulate for you.
+		// For some reason, at leat on my Ryzen 7 5700X, this does not work well AT ALL.
 		self.mul_add(a, b)
 	}
 	fn abs(self) -> Self {
@@ -84,14 +87,6 @@ where
 	fn norm_1(self) -> T;
 	fn norm(self) -> T;
 	fn norm_inf(self) -> T;
-}
-
-pub trait AngleCos<T> {
-	fn angle_cos(self, v: &Self) -> T;
-}
-
-pub trait Determinant<const N: usize, K: Mathable> {
-	fn det(&self) -> K;
 }
 
 #[cfg(test)]
