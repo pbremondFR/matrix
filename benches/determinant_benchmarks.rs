@@ -1,4 +1,5 @@
 #![feature(test)]
+#![allow(unused_variables)]
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 extern crate test;

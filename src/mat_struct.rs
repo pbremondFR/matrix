@@ -119,6 +119,7 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 	 * I lost almost a day because some stupid website gave me wrong results for calculating this...
 	 * Great video: https://www.youtube.com/watch?v=PTii4TBh9kQ
 	 */
+	#[allow(unused_variables)]	// Keep both lamdas just so I can remember them + evaluation
 	pub fn row_echelon(&self) -> Self where K: RealNumber {
 
 		/*
@@ -955,24 +956,5 @@ mod tests {
 			[7., 8., 9.],
 		]);
 		u.submatrix(3, 0);
-	}
-
-	extern crate test;
-	use test::Bencher;
-	use rand::distributions::{Distribution, Uniform};
-	#[bench]
-	fn benchmark_det(b: &mut Bencher) {
-		let mut rng = rand::thread_rng();
-		let die = Uniform::from(-200.0_f32..200.0_f32);
-		let u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = test::black_box(42);	// Trick compiler into not optimizing everything away
-			u.det()
-		})
 	}
 }

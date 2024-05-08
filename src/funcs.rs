@@ -39,6 +39,7 @@ pub fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<
 
 #[cfg(test)]
 mod tests {
+	#[allow(unused_imports)]
 	use crate::macros::assert_approx_eq;
 	use super::*;
 
