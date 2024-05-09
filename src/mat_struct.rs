@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::{math_traits::{Mathable, RealNumber}, Vector};
-use std::{fmt, ops};
+use std::{default, fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
 /* M lines, N columns
@@ -42,8 +42,8 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 
 	pub fn from(array: [[K; N]; M]) -> Self {
 		let mut ret = Self::new();
-		for (idx, &vec) in array.iter().enumerate() {
-			ret.data[idx] = Vector::from(vec);
+		for (idx, vec) in array.iter().enumerate() {
+			ret.data[idx] = Vector::from(*vec);
 		}
 		ret
 	}
@@ -318,6 +318,104 @@ impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
 	}
 }
 
+pub trait Inverse where Self: Sized + Default {
+	fn inverse(&self) -> Option<Self>;
+	fn inverse_unchecked(&self) -> Self {
+		self.inverse().unwrap_or_default()
+	}
+}
+
+impl<const N: usize, K: Mathable> Inverse for Matrix<N, N, K> {
+	default fn inverse(&self) -> Option<Self> {
+		None
+	}
+	default fn inverse_unchecked(&self) -> Self {
+		Self::default()
+	}
+}
+
+impl<K: Mathable> Inverse for Matrix<2, 2, K> {
+	fn inverse(&self) -> Option<Self> {
+		// let det = self.det();
+		// if det == K::zero() {
+		// 	return None;
+		// } else {
+			let transposed_comatrix = Self::from([
+				[self[1][1], -self[0][1]],
+				[-self[1][0], self[0][0]]
+			]);
+			return Some(&transposed_comatrix * (K::one() / self.det()))
+		// }
+	}
+}
+
+// #[inline(always)]
+// #[cold]
+// fn cold() {}
+
+// #[inline(always)]
+// fn likely(b: bool) -> bool {
+// 	if !b { cold() }
+// 	b
+// }
+
+// #[inline(always)]
+// fn unlikely(b: bool) -> bool {
+// 	if b { cold() }
+// 	b
+// }
+
+#[allow(non_snake_case)]
+#[allow(unused_parens)]
+impl<K: Mathable> Inverse for Matrix<3, 3, K> {
+	fn inverse(&self) -> Option<Self> {
+		let det = self.det();
+		if det != K::zero() {
+			// https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
+			let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
+			let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
+			let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
+			let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
+			let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
+			let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
+			let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
+			let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
+			let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
+			let mut transposed_comatrix = Self::from([
+				[A, D, G],
+				[B, E, H],
+				[C, F, I]
+			]);
+			transposed_comatrix *= (K::one() / det);
+			return Some(transposed_comatrix);
+		} else {
+			return None;
+		}
+	}
+
+	// The unchecked version is MUCH faster, but will return stupid matrices
+	fn inverse_unchecked(&self) -> Self {
+		let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
+		let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
+		let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
+		let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
+		let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
+		let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
+		let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
+		let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
+		let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
+		let mut transposed_comatrix = Self::from([
+			[A, D, G],
+			[B, E, H],
+			[C, F, I]
+		]);
+		let det = self[0][0] * A + self[1][1] * B + self[2][2] * C;
+		// let det = self.det();
+		transposed_comatrix *= (K::one() / det);
+		return transposed_comatrix;
+	}
+}
+
 impl<const M: usize, const N: usize, K: Mathable> ops::Index<usize> for Matrix<M, N, K> {
 	type Output = Vector::<N, K>;
 
@@ -374,9 +472,41 @@ where
 	fn mul(self, rhs: T) -> Self::Output {
 		let mut res = self.clone();
 		for i in 0..M {
-			res[i] = res[i] * rhs;
+			// res[i] = res[i] * rhs;
+			res[i] *= rhs;
 		}
 		res
+	}
+}
+
+// Matrix multiplication by number
+impl<const M: usize, const N: usize, K, T> ops::Mul<T> for &Matrix<M, N, K>
+where
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
+{
+	type Output = Matrix<M, N, K>;
+
+	fn mul(self, rhs: T) -> Self::Output {
+		let mut res = self.clone();
+		for i in 0..M {
+			// res[i] = res[i] * rhs;
+			res[i] *= rhs;
+		}
+		res
+	}
+}
+
+// Matrix multiplication by number
+impl<const M: usize, const N: usize, K, T> ops::MulAssign<T> for Matrix<M, N, K>
+where
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
+{
+	fn mul_assign(&mut self, rhs: T) {
+		for i in 0..M {
+			self[i] *= rhs;
+		}
 	}
 }
 
@@ -956,5 +1086,49 @@ mod tests {
 			[7., 8., 9.],
 		]);
 		u.submatrix(3, 0);
+	}
+
+	#[test]
+	fn inverse() {
+		let u = Matrix::from([
+			[1., 0., 0.],
+			[0., 1., 0.],
+			[0., 0., 1.],
+		]);
+		assert_eq!(u.inverse(), Some(u));
+
+		let u = Matrix::from([
+			[2., 0., 0.],
+			[0., 2., 0.],
+			[0., 0., 2.],
+		]);
+		let expected = Matrix::from([
+			[0.5, 0.0, 0.0],
+			[0.0, 0.5, 0.0],
+			[0.0, 0.0, 0.5]
+		]);
+		assert_eq!(u.inverse(), Some(expected));
+
+		let u = Matrix::from([
+			[8., 5., -2.],
+			[4., 7., 20.],
+			[7., 6., 1.],
+		]);
+		let expected = Matrix::from([
+			[0.649425287, 0.097701149, -0.655172414],
+			[-0.781609195, -0.126436782, 0.965517241],
+			[0.143678161, 0.074712644, -0.206896552]
+		]);
+		assert_matrices_approx_equal!(u.inverse().unwrap(), expected, f32::EPSILON);
+
+		let u = Matrix::from([
+			[4., 2.],
+			[2., 1.],
+		]);
+		let expected = Matrix::from([
+			[0.5, 0.0],
+			[0.0, 0.5]
+		]);
+		assert_matrices_approx_equal!(u.inverse_unchecked(), expected, f32::EPSILON);
 	}
 }

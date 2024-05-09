@@ -3,6 +3,7 @@
 #![feature(associated_type_defaults)]
 #![feature(generic_const_exprs)]
 #![feature(test)]
+#![feature(core_intrinsics)]
 pub mod math_traits;
 pub mod mat_struct;
 pub mod vec_struct;

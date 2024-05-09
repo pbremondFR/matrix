@@ -129,6 +129,18 @@ where T: Mathable + RealNumber
 // 	}
 // }
 
+impl<const N: usize, K: Mathable> FromIterator<K> for Vector<N, K> {
+	fn from_iter<T: IntoIterator<Item = K>>(iter: T) -> Self {
+		let mut res = Self::new();
+		let mut i: usize = 0;
+		for val in iter {
+			res[i] = val;
+			i += 1;
+		}
+		res
+	}
+}
+
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	type Output = K;
 
@@ -189,10 +201,22 @@ where
 	type Output = Self;
 
 	fn mul(self, rhs: T) -> Self {
-		let mul: Vec<K> = self.data.iter().map(|&x| x * rhs).collect();
-		Self::from_slice(&mul)
+		self.data.iter().map(|&x| x * rhs).collect()
 	}
 }
+
+impl<const N: usize, K, T> ops::Mul<T> for &Vector<N, K>
+where
+	K: Mathable + ops::Mul<T, Output = K>,
+	T: Mathable
+{
+	type Output = Vector<N, K>;
+
+	fn mul(self, rhs: T) -> Self::Output {
+		self.data.iter().map(|x| *x * rhs).collect()
+	}
+}
+
 
 impl<const N: usize, K, T> ops::MulAssign<T> for Vector<N, K>
 where
@@ -212,8 +236,19 @@ where
 	type Output = Self;
 
 	fn div(self, rhs: T) -> Self::Output {
-		let res: Vec<K> = self.data.iter().map(|&v| v / rhs).collect();
-		Self::from_slice(&res)
+		self.data.iter().map(|x| *x / rhs).collect()
+	}
+}
+
+impl<const N: usize, K, T> ops::Div<T> for &Vector<N, K>
+where
+	K: Mathable + ops::Div<T, Output = K>,
+	T: Mathable
+{
+	type Output = Vector<N, K>;
+
+	fn div(self, rhs: T) -> Self::Output {
+		*self / rhs
 	}
 }
 
