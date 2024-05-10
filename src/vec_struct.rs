@@ -141,6 +141,18 @@ impl<const N: usize, K: Mathable> FromIterator<K> for Vector<N, K> {
 	}
 }
 
+impl<'a, const N: usize, K: Mathable> FromIterator<&'a K> for Vector<N, K> {
+	fn from_iter<T: IntoIterator<Item = &'a K>>(iter: T) -> Self {
+		let mut res = Self::new();
+		let mut i: usize = 0;
+		for val in iter {
+			res[i] = *val;
+			i += 1;
+		}
+		res
+	}
+}
+
 impl<const N: usize, K: Mathable> ops::Index<usize> for Vector<N, K> {
 	type Output = K;
 

@@ -48,6 +48,14 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 		ret
 	}
 
+	pub fn from_slice(array: &[&[K]]) -> Self {
+		let mut ret = Self::new();
+		for (idx, &vec) in array.iter().enumerate() {
+			ret.data[idx] = Vector::from_slice(vec);
+		}
+		ret
+	}
+
 	pub fn as_slice(&self) -> &[Vector<N, K>] {
 		&self.data
 	}
@@ -194,6 +202,14 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 }
 
 impl<const M: usize, K: Mathable> Matrix<M, M, K> {
+	fn identity() -> Self {
+		let mut res = Self::new();
+		for i in 0..M {
+			res[i][i] = K::one();
+		}
+		res
+	}
+
 	fn trace(&self) -> K {
 		let mut res = self[0][0];
 		for i in 1..M {
@@ -318,103 +334,201 @@ impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
 	}
 }
 
-pub trait Inverse where Self: Sized + Default {
+// That last trait bound is for Gauss-Jordan elimination
+pub trait Inverse<const N: usize> where Self: Sized, [(); N + 3]: {
 	fn inverse(&self) -> Option<Self>;
-	fn inverse_unchecked(&self) -> Self {
-		self.inverse().unwrap_or_default()
-	}
+	fn inverse_unchecked(&self) -> Self;
 }
 
-impl<const N: usize, K: Mathable> Inverse for Matrix<N, N, K> {
+impl<const N: usize, K: Mathable> Inverse<N> for Matrix<N, N, K> where [(); N + 3]: {
 	default fn inverse(&self) -> Option<Self> {
-		None
-	}
-	default fn inverse_unchecked(&self) -> Self {
-		Self::default()
-	}
-}
+		/*
+		 * Using first non-zero instead of greatest abs() because complex numbers don't
+		 * have one definitive way to order/compare them
+		 */
+		 let find_first_non_zero = |col: &[K], start_idx: usize| {
+			for i in start_idx..col.len() {
+				if col[i] != K::zero() {
+					return i;
+				}
+			}
+			start_idx
+		};
 
-impl<K: Mathable> Inverse for Matrix<2, 2, K> {
-	fn inverse(&self) -> Option<Self> {
-		// let det = self.det();
-		// if det == K::zero() {
-		// 	return None;
-		// } else {
-			let transposed_comatrix = Self::from([
-				[self[1][1], -self[0][1]],
-				[-self[1][0], self[0][0]]
-			]);
-			return Some(&transposed_comatrix * (K::one() / self.det()))
-		// }
-	}
-}
-
-// #[inline(always)]
-// #[cold]
-// fn cold() {}
-
-// #[inline(always)]
-// fn likely(b: bool) -> bool {
-// 	if !b { cold() }
-// 	b
-// }
-
-// #[inline(always)]
-// fn unlikely(b: bool) -> bool {
-// 	if b { cold() }
-// 	b
-// }
-
-#[allow(non_snake_case)]
-#[allow(unused_parens)]
-impl<K: Mathable> Inverse for Matrix<3, 3, K> {
-	fn inverse(&self) -> Option<Self> {
-		let det = self.det();
+		/*
+		 * Guess who's back? Back again?
+		 * Gauss.
+		 * And Jordan, too. Wouldn't want to forget that guy.
+		 */
+		let mut product = K::one();
+		let mut row_swap_factor = K::one();
+		let mut tmp = Matrix::<N, {N + 3}, K>::new();
+		// Fill in temporary matrix with current matrix on the left, identity on the right
+		for i in 0..N {
+			tmp[i] = Vector::<{N + 3}, K>::from_iter(self[i].as_slice().iter());
+			tmp[i][i + N] = K::one();
+		}
+		for i in 0..N {
+			let pivot = find_first_non_zero(tmp.get_column(i).as_slice(), i);
+			if pivot != i {
+				tmp.swap_rows(pivot, i);
+				row_swap_factor = -row_swap_factor;
+			}
+			product *= tmp[i][i];
+			let coef = tmp[i][i];
+			tmp[i] /= coef;
+			for k in 0..N {
+				if tmp[k][i] == K::zero() || k == i {
+					continue;
+				}
+				let diff = tmp[i] * tmp[k][i];
+				tmp[k] -= diff;
+			}
+		}
+		let det = row_swap_factor * product;
 		if det != K::zero() {
-			// https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
-			let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
-			let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
-			let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
-			let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
-			let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
-			let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
-			let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
-			let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
-			let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
-			let mut transposed_comatrix = Self::from([
-				[A, D, G],
-				[B, E, H],
-				[C, F, I]
-			]);
-			transposed_comatrix *= (K::one() / det);
-			return Some(transposed_comatrix);
+			// TODO: For now breaks space complexity requirement, but benchmark before changing it
+			let mut res = Self::new();
+			for i in 0..N {
+				res[i] = Vector::<N, K>::from_slice(&tmp[i].as_slice()[N..N * 2])
+			}
+			Some(res)
 		} else {
-			return None;
+			None
 		}
 	}
 
-	// The unchecked version is MUCH faster, but will return stupid matrices
-	fn inverse_unchecked(&self) -> Self {
-		let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
-		let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
-		let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
-		let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
-		let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
-		let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
-		let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
-		let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
-		let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
-		let mut transposed_comatrix = Self::from([
-			[A, D, G],
-			[B, E, H],
-			[C, F, I]
-		]);
-		let det = self[0][0] * A + self[1][1] * B + self[2][2] * C;
-		// let det = self.det();
-		transposed_comatrix *= (K::one() / det);
-		return transposed_comatrix;
+	default fn inverse_unchecked(&self) -> Self {
+		/*
+		 * Using first non-zero instead of greatest abs() because complex numbers don't
+		 * have one definitive way to order/compare them
+		 */
+		 let find_first_non_zero = |col: &[K], start_idx: usize| {
+			for i in start_idx..col.len() {
+				if col[i] != K::zero() {
+					return i;
+				}
+			}
+			start_idx
+		};
+
+		/*
+		 * Guess who's back? Back again?
+		 * Gauss.
+		 * And Jordan, too. Wouldn't want to forget that guy.
+		 */
+		// TODO: For now breaks space complexity requirement, but benchmark before changing it
+		let mut tmp = Matrix::<N, {N + 3}, K>::new();
+		for i in 0..N {
+			let pivot = find_first_non_zero(tmp.get_column(i).as_slice(), i);
+			if pivot != i {
+				tmp.swap_rows(pivot, i);
+			}
+			let coef = tmp[i][i];
+			tmp[i] /= coef;
+			for k in 0..N {
+				if tmp[k][i] == K::zero() || k == i {
+					continue;
+				}
+				let diff = tmp[i] * tmp[k][i];
+				tmp[k] -= diff;
+			}
+		}
+		let mut res = Self::new();
+		for i in 0..N {
+			res[i] = Vector::<N, K>::from_slice(&tmp[i].as_slice()[N..N * 2])
+		}
+		res
 	}
 }
+
+// impl<K: Mathable> Inverse<1> for Matrix<1, 1, K> {
+// 	fn inverse(&self) -> Option<Self> {
+// 		if self[0][0] != K::zero() {
+// 			Some(Self::from([[K::one() / self[0][0]]]))
+// 		} else {
+// 			None
+// 		}
+// 	}
+
+// 	fn inverse_unchecked(&self) -> Self {
+// 		Self::from([[K::one() / self[0][0]]])
+// 	}
+// }
+
+// impl<K: Mathable> Inverse<2> for Matrix<2, 2, K> {
+// 	fn inverse(&self) -> Option<Self> {
+// 		let det = self.det();
+// 		if det == K::zero() {
+// 			return None;
+// 		} else {
+// 			let transposed_comatrix = Self::from([
+// 				[self[1][1], -self[0][1]],
+// 				[-self[1][0], self[0][0]]
+// 			]);
+// 			return Some(&transposed_comatrix * (K::one() / self.det()))
+// 		}
+// 	}
+
+// 	fn inverse_unchecked(&self) -> Self {
+// 		let transposed_comatrix = Self::from([
+// 			[self[1][1], -self[0][1]],
+// 			[-self[1][0], self[0][0]]
+// 		]);
+// 		&transposed_comatrix * (K::one() / self.det())
+// 	}
+// }
+
+// #[allow(non_snake_case)]
+// #[allow(unused_parens)]
+// impl<K: Mathable> Inverse<3> for Matrix<3, 3, K> {
+// 	fn inverse(&self) -> Option<Self> {
+// 		let det = self.det();
+// 		if det != K::zero() {
+// 			// https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
+// 			let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
+// 			let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
+// 			let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
+// 			let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
+// 			let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
+// 			let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
+// 			let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
+// 			let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
+// 			let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
+// 			let mut transposed_comatrix = Self::from([
+// 				[A, D, G],
+// 				[B, E, H],
+// 				[C, F, I]
+// 			]);
+// 			transposed_comatrix *= (K::one() / det);
+// 			return Some(transposed_comatrix);
+// 		} else {
+// 			return None;
+// 		}
+// 	}
+
+// 	// The unchecked version is MUCH faster, but will return stupid matrices
+// 	fn inverse_unchecked(&self) -> Self {
+// 		let A =  (self[1][1] * self[2][2] - self[1][2] * self[2][1]);
+// 		let D = -(self[0][1] * self[2][2] - self[0][2] * self[2][1]);
+// 		let G =  (self[0][1] * self[1][2] - self[0][2] * self[1][1]);
+// 		let B = -(self[1][0] * self[2][2] - self[1][2] * self[2][0]);
+// 		let E =  (self[0][0] * self[2][2] - self[0][2] * self[2][0]);
+// 		let H = -(self[0][0] * self[1][2] - self[0][2] * self[1][0]);
+// 		let C =  (self[1][0] * self[2][1] - self[1][1] * self[2][0]);
+// 		let F = -(self[0][0] * self[2][1] - self[0][1] * self[2][0]);
+// 		let I =  (self[0][0] * self[1][1] - self[0][1] * self[1][0]);
+// 		let mut transposed_comatrix = Self::from([
+// 			[A, D, G],
+// 			[B, E, H],
+// 			[C, F, I]
+// 		]);
+// 		let det = self[0][0] * A + self[1][1] * B + self[2][2] * C;
+// 		// let det = self.det();
+// 		transposed_comatrix *= (K::one() / det);
+// 		return transposed_comatrix;
+// 	}
+// }
 
 impl<const M: usize, const N: usize, K: Mathable> ops::Index<usize> for Matrix<M, N, K> {
 	type Output = Vector::<N, K>;
@@ -1125,10 +1239,24 @@ mod tests {
 			[4., 2.],
 			[2., 1.],
 		]);
-		let expected = Matrix::from([
-			[0.5, 0.0],
-			[0.0, 0.5]
+		assert_eq!(u.inverse(), None);
+
+		let u = Matrix::from([
+			[0., 0.],
+			[0., 0.],
 		]);
-		assert_matrices_approx_equal!(u.inverse_unchecked(), expected, f32::EPSILON);
+		assert_eq!(u.inverse(), None);
+
+		let u = Matrix::from([
+			[0., 1.],
+			[1., 0.],
+		]);
+		assert_eq!(u.inverse(), Some(u));
+
+		let u = Matrix::from([
+			[ 1., -1.],
+			[-1., 1.],
+		]);
+		assert_eq!(u.inverse(), None);
 	}
 }
