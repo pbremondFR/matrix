@@ -419,6 +419,11 @@ impl<const N: usize, K: Mathable> Inverse<N> for Matrix<N, N, K> where [(); N + 
 		 */
 		// TODO: For now breaks space complexity requirement, but benchmark before changing it
 		let mut tmp = Matrix::<N, {N + 3}, K>::new();
+		// Fill in temporary matrix with current matrix on the left, identity on the right
+		for i in 0..N {
+			tmp[i] = Vector::<{N + 3}, K>::from_iter(self[i].as_slice().iter());
+			tmp[i][i + N] = K::one();
+		}
 		for i in 0..N {
 			let pivot = find_first_non_zero(tmp.get_column(i).as_slice(), i);
 			if pivot != i {
