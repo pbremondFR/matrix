@@ -1,5 +1,5 @@
 use num_traits::*;
-use std::ops::{Sub, Add, Mul};
+use std::ops::{Add, Mul, MulAssign, Sub};
 use crate::{Matrix, Vector};
 
 pub trait Mathable: Copy + Signed + NumAssignOps + Default {
@@ -75,7 +75,8 @@ where
 
 impl<const M: usize, const N: usize, K> Lerp<Matrix<M, N, K>> for Matrix<M, N, K>
 where
-	K: Mathable + Mul<f32, Output = K>
+	// Mul and MulAssign with f32 are required for lerp
+	K: Mathable + Mul<f32, Output = K> + MulAssign<f32>
 {
 	// Default impl
 }

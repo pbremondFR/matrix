@@ -336,23 +336,16 @@ impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
 
 // That last trait bound is for Gauss-Jordan elimination
 pub trait Inverse<const N: usize> where Self: Sized + Clone, [(); N * 2]: {
-	fn inverse(&self) -> Option<Self>;
+	// If the matrix is inversible, mutates self to contain its inverse. Else, returns None.
+	fn inverse(&mut self) -> Option<Self>;
+	// Does not check if matrix is invertible, giving a nonsense result if determinant is 0.
+	// Much faster for small matrices.
 	fn inverse_unchecked(&self) -> Self;
-	fn inverse_inplace(&mut self) -> Option<Self> {
-		match self.inverse() {
-			Some(res) => { *self = res; Some(self.clone()) },
-			None => None
-		}
-	}
 }
 
 impl<const N: usize, K: Mathable> Inverse<N> for Matrix<N, N, K> where [(); N * 2]: {
-	default fn inverse(&self) -> Option<Self> {
-		/*
-		 * Using first non-zero instead of greatest abs() because complex numbers don't
-		 * have one definitive way to order/compare them
-		 */
-		 let find_first_non_zero = |col: &[K], start_idx: usize| {
+	default fn inverse(&mut self) -> Option<Self> {
+		let find_first_non_zero = |col: &[K], start_idx: usize| {
 			for i in start_idx..col.len() {
 				if col[i] != K::zero() {
 					return i;
@@ -361,46 +354,36 @@ impl<const N: usize, K: Mathable> Inverse<N> for Matrix<N, N, K> where [(); N * 
 			start_idx
 		};
 
-		/*
-		 * Guess who's back? Back again?
-		 * Gauss.
-		 * And Jordan, too. Wouldn't want to forget that guy.
-		 */
+		// Identity matrix on the right
 		let mut product = K::one();
 		let mut row_swap_factor = K::one();
-		let mut tmp = Matrix::<N, {N * 2}, K>::new();
-		// Fill in temporary matrix with current matrix on the left, identity on the right
+		let mut rhs = Self::identity();
 		for i in 0..N {
-			tmp[i] = Vector::<{N * 2}, K>::from_iter(self[i].as_slice().iter());
-			tmp[i][i + N] = K::one();
-		}
-		for i in 0..N {
-			let pivot = find_first_non_zero(tmp.get_column(i).as_slice(), i);
+			let pivot = find_first_non_zero(self.get_column(i).as_slice(), i);
 			if pivot != i {
-				tmp.swap_rows(pivot, i);
+				self.swap_rows(pivot, i);
+				rhs.swap_rows(pivot, i);
 				row_swap_factor = -row_swap_factor;
 			}
-			product *= tmp[i][i];
-			let coef = tmp[i][i];
-			tmp[i] /= coef;
+			let coef = self[i][i];
+			product *= coef;
+			self[i] /= coef;
+			rhs[i] /= coef;
 			for k in 0..N {
-				if tmp[k][i] == K::zero() || k == i {
+				if self[k][i] == K::zero() || k == i {
 					continue;
 				}
-				let diff = tmp[i] * tmp[k][i];
-				tmp[k] -= diff;
+				let diff_left = self[i] * self[k][i];
+				let diff_right = rhs[i] * self[k][i];
+				self[k] -= diff_left;
+				rhs[k] -= diff_right;
 			}
 		}
-		let det = row_swap_factor * product;
-		if det != K::zero() {
-			// TODO: For now breaks space complexity requirement, but benchmark before changing it
-			let mut res = Self::new();
-			for i in 0..N {
-				res[i] = Vector::<N, K>::from_slice(&tmp[i].as_slice()[N..N * 2])
-			}
-			Some(res)
-		} else {
+		if row_swap_factor * product == K::zero() {
 			None
+		} else {
+			*self = rhs;
+			Some(self.clone())
 		}
 	}
 
@@ -452,55 +435,13 @@ impl<const N: usize, K: Mathable> Inverse<N> for Matrix<N, N, K> where [(); N * 
 		res
 	}
 
-	// Holy shit this scales SO much better
-	default fn inverse_inplace(&mut self) -> Option<Self> {
-		 let find_first_non_zero = |col: &[K], start_idx: usize| {
-			for i in start_idx..col.len() {
-				if col[i] != K::zero() {
-					return i;
-				}
-			}
-			start_idx
-		};
-
-		// Identity matrix on the right
-		let mut product = K::one();
-		let mut row_swap_factor = K::one();
-		let mut rhs = Self::identity();
-		for i in 0..N {
-			let pivot = find_first_non_zero(self.get_column(i).as_slice(), i);
-			if pivot != i {
-				self.swap_rows(pivot, i);
-				rhs.swap_rows(pivot, i);
-				row_swap_factor = -row_swap_factor;
-			}
-			let coef = self[i][i];
-			product *= coef;
-			self[i] /= coef;
-			rhs[i] /= coef;
-			for k in 0..N {
-				if self[k][i] == K::zero() || k == i {
-					continue;
-				}
-				let diff_left = self[i] * self[k][i];
-				let diff_right = rhs[i] * self[k][i];
-				self[k] -= diff_left;
-				rhs[k] -= diff_right;
-			}
-		}
-		if row_swap_factor * product == K::zero() {
-			None
-		} else {
-			*self = rhs;
-			Some(self.clone())
-		}
-	}
 }
 
 impl<K: Mathable> Inverse<1> for Matrix<1, 1, K> {
-	fn inverse(&self) -> Option<Self> {
+	fn inverse(&mut self) -> Option<Self> {
 		if self[0][0] != K::zero() {
-			Some(Self::from([[K::one() / self[0][0]]]))
+			self[0][0] = K::one() / self[0][0];
+			Some(self.clone())
 		} else {
 			None
 		}
@@ -512,16 +453,23 @@ impl<K: Mathable> Inverse<1> for Matrix<1, 1, K> {
 }
 
 impl<K: Mathable> Inverse<2> for Matrix<2, 2, K> {
-	fn inverse(&self) -> Option<Self> {
+	/*
+	 * XXX: For 2x2 matrices, doing if mat.det() != 0.0 { mat.inverse(); } might be MUCH faster.
+	 * Don't ask me why, but the compiler has been torturing me.
+	 * For some fucking reason, it just doesn't want to optimize itself. And I'm not
+	 * touching assembly with a stick rn. So, yeah.
+	 */
+	fn inverse(&mut self) -> Option<Self> {
 		let det = self.det();
 		if det == K::zero() {
 			return None;
 		} else {
-			let transposed_comatrix = Self::from([
+			*self = Self::from([
 				[self[1][1], -self[0][1]],
 				[-self[1][0], self[0][0]]
 			]);
-			return Some(&transposed_comatrix * (K::one() / self.det()))
+			*self *= K::one() / det;
+			return Some(self.clone())
 		}
 	}
 
@@ -537,7 +485,8 @@ impl<K: Mathable> Inverse<2> for Matrix<2, 2, K> {
 #[allow(non_snake_case)]
 #[allow(unused_parens)]
 impl<K: Mathable> Inverse<3> for Matrix<3, 3, K> {
-	fn inverse(&self) -> Option<Self> {
+	fn inverse(&mut self) -> Option<Self> {
+		// TODO: Benchmark this vs calc det with aB + bB + cC
 		let det = self.det();
 		if det != K::zero() {
 			// https://en.wikipedia.org/wiki/Invertible_matrix#Inversion_of_3_%C3%97_3_matrices
@@ -556,7 +505,8 @@ impl<K: Mathable> Inverse<3> for Matrix<3, 3, K> {
 				[C, F, I]
 			]);
 			transposed_comatrix *= (K::one() / det);
-			return Some(transposed_comatrix);
+			*self = transposed_comatrix;
+			return Some(self.clone());
 		} else {
 			return None;
 		}
@@ -633,7 +583,7 @@ impl<const M: usize, const N: usize, K: Mathable> ops::Sub<Matrix<M, N, K>> for 
 // Matrix multiplication by number
 impl<const M: usize, const N: usize, K, T> ops::Mul<T> for Matrix<M, N, K>
 where
-	K: Mathable + ops::Mul<T, Output = K>,
+	K: Mathable + ops::MulAssign<T>,
 	T: Mathable
 {
 	type Output = Self;
@@ -651,7 +601,7 @@ where
 // Matrix multiplication by number
 impl<const M: usize, const N: usize, K, T> ops::Mul<T> for &Matrix<M, N, K>
 where
-	K: Mathable + ops::Mul<T, Output = K>,
+	K: Mathable + ops::MulAssign<T>,
 	T: Mathable
 {
 	type Output = Matrix<M, N, K>;
@@ -669,7 +619,7 @@ where
 // Matrix multiplication by number
 impl<const M: usize, const N: usize, K, T> ops::MulAssign<T> for Matrix<M, N, K>
 where
-	K: Mathable + ops::Mul<T, Output = K>,
+	K: Mathable + ops::MulAssign<T>,
 	T: Mathable
 {
 	fn mul_assign(&mut self, rhs: T) {
@@ -1259,14 +1209,14 @@ mod tests {
 
 	#[test]
 	fn inverse() {
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[1., 0., 0.],
 			[0., 1., 0.],
 			[0., 0., 1.],
 		]);
 		assert_eq!(u.inverse(), Some(u));
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[2., 0., 0.],
 			[0., 2., 0.],
 			[0., 0., 2.],
@@ -1278,7 +1228,7 @@ mod tests {
 		]);
 		assert_eq!(u.inverse(), Some(expected));
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[8., 5., -2.],
 			[4., 7., 20.],
 			[7., 6., 1.],
@@ -1290,89 +1240,28 @@ mod tests {
 		]);
 		assert_matrices_approx_equal!(u.inverse().unwrap(), expected, f32::EPSILON);
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[4., 2.],
 			[2., 1.],
 		]);
 		assert_eq!(u.inverse(), None);
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[0., 0.],
 			[0., 0.],
 		]);
 		assert_eq!(u.inverse(), None);
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[0., 1.],
 			[1., 0.],
 		]);
 		assert_eq!(u.inverse(), Some(u));
 
-		let u = Matrix::from([
+		let mut u = Matrix::from([
 			[ 1., -1.],
 			[-1., 1.],
 		]);
 		assert_eq!(u.inverse(), None);
 	}
-
-	// #[test]
-	// fn inverse_inplace() {
-	// 	let mut u = Matrix::from([
-	// 		[1., 0., 0.],
-	// 		[0., 1., 0.],
-	// 		[0., 0., 1.],
-	// 	]);
-	// 	let expected = u.clone();
-	// 	assert_eq!(*u.inverse_inplace().expect("Should not be None!"), expected);
-
-	// 	let mut u = Matrix::from([
-	// 		[2., 0., 0.],
-	// 		[0., 2., 0.],
-	// 		[0., 0., 2.],
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[0.5, 0.0, 0.0],
-	// 		[0.0, 0.5, 0.0],
-	// 		[0.0, 0.0, 0.5]
-	// 	]);
-	// 	assert_eq!(*u.inverse_inplace().expect("Should not be None!"), expected);
-
-	// 	let mut u = Matrix::from([
-	// 		[8., 5., -2.],
-	// 		[4., 7., 20.],
-	// 		[7., 6., 1.],
-	// 	]);
-	// 	let expected = Matrix::from([
-	// 		[0.649425287, 0.097701149, -0.655172414],
-	// 		[-0.781609195, -0.126436782, 0.965517241],
-	// 		[0.143678161, 0.074712644, -0.206896552]
-	// 	]);
-	// 	u.inverse_inplace();
-	// 	assert_matrices_approx_equal!(u, expected, f32::EPSILON);
-
-	// 	let mut u = Matrix::from([
-	// 		[4., 2.],
-	// 		[2., 1.],
-	// 	]);
-	// 	assert_eq!(u.inverse_inplace(), None);
-
-	// 	let mut u = Matrix::from([
-	// 		[0., 0.],
-	// 		[0., 0.],
-	// 	]);
-	// 	assert_eq!(u.inverse_inplace(), None);
-
-	// 	let mut u = Matrix::from([
-	// 		[0., 1.],
-	// 		[1., 0.],
-	// 	]);
-	// 	let expected = u.clone();
-	// 	assert_eq!(*u.inverse_inplace().expect("Should not be None!"), expected);
-
-	// 	let mut u = Matrix::from([
-	// 		[ 1., -1.],
-	// 		[-1., 1.],
-	// 	]);
-	// 	assert_eq!(u.inverse_inplace(), None);
-	// }
 }

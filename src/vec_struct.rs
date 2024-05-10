@@ -232,11 +232,13 @@ where
 
 impl<const N: usize, K, T> ops::MulAssign<T> for Vector<N, K>
 where
-	K: Mathable + ops::Mul<T, Output = K>,
+	K: Mathable + ops::MulAssign<T>,
 	T: Mathable
 {
 	fn mul_assign(&mut self, rhs: T) {
-		*self = *self * rhs;
+		for i in 0..N {
+			self.data[i] *= rhs;
+		}
 	}
 }
 

@@ -37,28 +37,57 @@ fn inverse(c: &mut Criterion) {
 	// 	})
 	// });
 
-	// c.bench_function("2x2 matrix inverse", |b| {
-	// 	let u = Matrix::from([
-	// 		[die.sample(&mut rng), die.sample(&mut rng)],
-	// 		[die.sample(&mut rng), die.sample(&mut rng)],
-	// 	]);
-	// 	b.iter(|| {
-	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
-	// 		u.inverse()
-	// 	})
-	// });
+	c.bench_function("2x2 matrix inverse", |b| {
+		let mut u = Matrix::from([
+			[die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng)],
+		]);
+		b.iter(|| {
+			let n = black_box(42);	// Trick compiler into not optimizing everything away
+			u.inverse()
+			// if u.det() != 0.0 {
+			// 	u.inverse_unchecked();
+			// } else {
+			// 	panic!("fuck");
+			// }
+			// u
+		})
+	});
 
-	// c.bench_function("3x3 matrix inverse", |b| {
-	// 	let u = Matrix::from([
-	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-	// 	]);
-	// 	b.iter(|| {
-	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
-	// 		u.inverse()
-	// 	})
-	// });
+	c.bench_function("2x2 unchecked matrix inverse", |b| {
+		let u = Matrix::from([
+			[die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng)],
+		]);
+		b.iter(|| {
+			let n = black_box(42);	// Trick compiler into not optimizing everything away
+			u.inverse_unchecked()
+		})
+	});
+
+	c.bench_function("3x3 matrix inverse", |b| {
+		let mut u = Matrix::from([
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+		]);
+		b.iter(|| {
+			let n = black_box(42);	// Trick compiler into not optimizing everything away
+			u.inverse()
+		})
+	});
+
+	c.bench_function("3x3 unchecked matrix inverse", |b| {
+		let u = Matrix::from([
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+		]);
+		b.iter(|| {
+			let n = black_box(42);	// Trick compiler into not optimizing everything away
+			u.inverse_unchecked()
+		})
+	});
 
 	// c.bench_function("4x4 matrix inverse", |b| {
 	// 	let u = Matrix::from([
@@ -87,83 +116,83 @@ fn inverse(c: &mut Criterion) {
 	// 	})
 	// });
 
-	c.bench_function("6x6 matrix inverse", |b| {
-		let u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse()
-		})
-	});
+	// c.bench_function("6x6 matrix inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse()
+	// 	})
+	// });
 
-	c.bench_function("7x7 matrix inverse", |b| {
-		let u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse()
-		})
-	});
+	// c.bench_function("7x7 matrix inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse()
+	// 	})
+	// });
 
-	c.bench_function("8x8 matrix inverse", |b| {
-		let u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse()
-		})
-	});
+	// c.bench_function("8x8 matrix inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse()
+	// 	})
+	// });
 
-	c.bench_function("9x9 matrix inverse", |b| {
-		let u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse()
-		})
-	});
+	// c.bench_function("9x9 matrix inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse()
+	// 	})
+	// });
 
-	c.bench_function("20x20 matrix inverse", |b| {
-		const SIZE: usize = 20;
-		let mut u = Matrix::<SIZE, SIZE>::new();
-		for i in 0..SIZE {
-			u[i] = Vector::<SIZE>::from_iter((0..SIZE).map(|_| die.sample(&mut rng)));
-		}
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse()
-		})
-	});
+	// c.bench_function("20x20 matrix inverse", |b| {
+	// 	const SIZE: usize = 20;
+	// 	let mut u = Matrix::<SIZE, SIZE>::new();
+	// 	for i in 0..SIZE {
+	// 		u[i] = Vector::<SIZE>::from_iter((0..SIZE).map(|_| die.sample(&mut rng)));
+	// 	}
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse()
+	// 	})
+	// });
 
 	// c.bench_function("2x2 matrix in-place inverse", |b| {
 	// 	let mut u = Matrix::from([
@@ -215,83 +244,83 @@ fn inverse(c: &mut Criterion) {
 	// 	})
 	// });
 
-	c.bench_function("6x6 matrix in-place inverse", |b| {
-		let mut u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse_inplace()
-		})
-	});
+	// c.bench_function("6x6 matrix in-place inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse_inplace()
+	// 	})
+	// });
 
-	c.bench_function("7x7 matrix in-place inverse", |b| {
-		let mut u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse_inplace()
-		})
-	});
+	// c.bench_function("7x7 matrix in-place inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse_inplace()
+	// 	})
+	// });
 
-	c.bench_function("8x8 matrix in-place inverse", |b| {
-		let mut u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse_inplace()
-		})
-	});
+	// c.bench_function("8x8 matrix in-place inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse_inplace()
+	// 	})
+	// });
 
-	c.bench_function("9x9 matrix in-place inverse", |b| {
-		let mut u = Matrix::from([
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-			[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
-		]);
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse_inplace()
-		})
-	});
+	// c.bench_function("9x9 matrix in-place inverse", |b| {
+	// 	let mut u = Matrix::from([
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 		[die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng), die.sample(&mut rng)],
+	// 	]);
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse_inplace()
+	// 	})
+	// });
 
-	c.bench_function("20x20 matrix in-place inverse", |b| {
-		const SIZE: usize = 20;
-		let mut u = Matrix::<SIZE, SIZE>::new();
-		for i in 0..SIZE {
-			u[i] = Vector::<SIZE>::from_iter((0..SIZE).map(|_| die.sample(&mut rng)));
-		}
-		b.iter(|| {
-			let n = black_box(42);	// Trick compiler into not optimizing everything away
-			u.inverse_inplace()
-		})
-	});
+	// c.bench_function("20x20 matrix in-place inverse", |b| {
+	// 	const SIZE: usize = 20;
+	// 	let mut u = Matrix::<SIZE, SIZE>::new();
+	// 	for i in 0..SIZE {
+	// 		u[i] = Vector::<SIZE>::from_iter((0..SIZE).map(|_| die.sample(&mut rng)));
+	// 	}
+	// 	b.iter(|| {
+	// 		let n = black_box(42);	// Trick compiler into not optimizing everything away
+	// 		u.inverse_inplace()
+	// 	})
+	// });
 }
 
 criterion_group!(benches, inverse);
