@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::{math_traits::{Mathable, RealNumber}, Vector};
-use std::{default, fmt, ops};
+use std::{fmt, ops};
 
 #[derive(Debug, Clone, Copy)]
 /* M lines, N columns
@@ -198,6 +198,45 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 			i += 1;
 		}
 		res
+	}
+
+	pub fn rank(&self) -> usize {
+		let mut tmp = self.clone();
+		// let mut result: usize = 0;
+
+		let find_first_non_zero = |col: &[K], start_idx: usize| {
+			for i in start_idx..col.len() {
+				if col[i] != K::zero() {
+					return i;
+				}
+			}
+			start_idx
+		};
+
+		let mut i: usize = 0;
+		let mut j: usize = 0;
+		while i < M && j < N {
+			let pivot = find_first_non_zero(tmp.get_column(j).as_slice(), i);
+			if tmp[pivot][j] == K::zero() {
+				j += 1;
+			} else {
+				if pivot != i {
+					tmp.swap_rows(pivot, i);
+				}
+				let coef = tmp[i][j];
+				tmp[i] /= coef;
+				for k in 0..M {
+					if tmp[k][j] == K::zero() || k == i {
+						continue;
+					}
+					let diff = tmp[i] * tmp[k][j];
+					tmp[k] -= diff;
+				}
+				i += 1;
+				j += 1;
+			}
+		}
+		return i;
 	}
 }
 
@@ -1263,5 +1302,44 @@ mod tests {
 			[-1., 1.],
 		]);
 		assert_eq!(u.inverse(), None);
+	}
+
+	#[test]
+	fn rank() {
+		let u = Matrix::from([
+			[1., 0., 0.],
+			[0., 1., 0.],
+			[0., 0., 1.],
+		]);
+		assert_eq!(u.rank(), 3);
+
+		let u = Matrix::from([
+			[ 1., 2., 0., 0.],
+			[ 2., 4., 0., 0.],
+			[-1., 2., 1., 1.],
+		]);
+		assert_eq!(u.rank(), 2);
+
+		let u = Matrix::from([
+			[ 8., 5., -2.],
+			[ 4., 7., 20.],
+			[ 7., 6., 1.],
+			[21., 18., 7.],
+		]);
+		assert_eq!(u.rank(), 3);
+
+		let u = Matrix::from([
+			[1., 0., 1.],
+			[0., 1., 1.],
+			[0., 1., 1.],
+		]);
+		assert_eq!(u.rank(), 2);
+
+		let u = Matrix::from([
+			[ 1.,  2.,  3.],
+			[ 0.,  2.,  2.],
+			[ 1., -2., -1.],
+		]);
+		assert_eq!(u.rank(), 2);
 	}
 }
