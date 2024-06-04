@@ -1,4 +1,4 @@
-use crate::{math_traits::*, vec_struct::*};
+use crate::{math_traits::*, vec_struct::*, Matrix};
 
 pub fn linear_combination<K: Mathable, const N: usize>(u: &[Vector<N, K>], coefs: &[K]) -> Vector<N, K>
 {
@@ -35,6 +35,22 @@ pub fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<
 		u[2] * v[0] - u[0] * v[2],
 		u[0] * v[1] - u[1] * v[0],
 	])
+}
+
+pub fn projection(fov: f32, ratio: f32, near: f32, far: f32) -> Matrix::<4, 4, f32> {
+	const DEG_TO_RAD: f32 = std::f32::consts::PI / 180.0;
+
+	let fov = fov * ratio;
+	let scaling_factor: f32 = 1.0 / f32::tan( (fov / 2.0) * DEG_TO_RAD );
+	let yolo1 = -far / (far - near);
+	let yolo2 = -(far * near) / (far - near);
+	let projmat = Matrix::<4, 4, f32>::from([
+		[scaling_factor, 0.0, 0.0, 0.0],
+		[0.0, scaling_factor, 0.0, 0.0],
+		[0.0, 0.0, yolo1, -1.0],
+		[0.0, 0.0, yolo2, 0.0],
+	]);
+	return projmat;
 }
 
 #[cfg(test)]
@@ -84,5 +100,14 @@ mod tests {
 		let u = Vector::from([4., 2., -3.]);
 		let v = Vector::from([-2., -5., 16.]);
 		assert_eq!(cross_product(&u, &v), vector!(17.0, -58.0, -16.0));
+	}
+
+	#[test]
+	fn projection_matrix() {
+		let proj = projection(70.0, 1.0, 1.0, 50.0);
+		println!("{}, {}, {}, {}", proj[0][0], proj[0][1], proj[0][2], proj[0][3]);
+		println!("{}, {}, {}, {}", proj[1][0], proj[1][1], proj[1][2], proj[1][3]);
+		println!("{}, {}, {}, {}", proj[2][0], proj[2][1], proj[2][2], proj[2][3]);
+		println!("{}, {}, {}, {}", proj[3][0], proj[3][1], proj[3][2], proj[3][3]);
 	}
 }
