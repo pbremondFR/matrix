@@ -57,7 +57,7 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 	pub fn dot(self, v: &Vector<N, K>) -> K {
 		let mut res = self[0] * v[0];
 		for i in 1..N {
-			res = self[i].mul_add(v[i], res);
+			res += self[i] * v[i];
 		}
 		res
 	}

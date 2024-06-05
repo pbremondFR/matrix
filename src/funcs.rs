@@ -40,15 +40,22 @@ pub fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<
 pub fn projection(fov: f32, ratio: f32, near: f32, far: f32) -> Matrix::<4, 4, f32> {
 	const DEG_TO_RAD: f32 = std::f32::consts::PI / 180.0;
 
-	let fov = fov * ratio;
-	let scaling_factor: f32 = 1.0 / f32::tan( (fov / 2.0) * DEG_TO_RAD );
-	let yolo1 = -far / (far - near);
-	let yolo2 = -(far * near) / (far - near);
+	let top = f32::tan(fov * DEG_TO_RAD / 2.0) * near;
+	let bottom = -top;
+	let right = top * ratio;
+	let left = -right;
+
+	let x_transform = 2.0 * near / (right - left);
+	let y_transform = 2.0 * near / (top - bottom);
+	let wtf1 = (right + left) / (right - left);	// These are always 0. Why does openGL define them like this?
+	let wtf2 = (top + bottom) / (top - bottom);
+	let far_plane = -far / (far - near);	// NDC is [0;1]
+	let near_plane = (-far * near) / (far - near);
 	let projmat = Matrix::<4, 4, f32>::from([
-		[scaling_factor, 0.0, 0.0, 0.0],
-		[0.0, scaling_factor, 0.0, 0.0],
-		[0.0, 0.0, yolo1, -1.0],
-		[0.0, 0.0, yolo2, 0.0],
+		[x_transform,	0.0,			0.0,		0.0],
+		[0.0,			y_transform,	0.0,		0.0],
+		[wtf1,			wtf2,			far_plane,	-1.0],
+		[0.0,			0.0,			near_plane,	0.0],
 	]);
 	return projmat;
 }
@@ -104,10 +111,17 @@ mod tests {
 
 	#[test]
 	fn projection_matrix() {
-		let proj = projection(70.0, 1.0, 1.0, 50.0);
+		let proj = projection(70.0, 1.0, 0.1, 10.0);
 		println!("{}, {}, {}, {}", proj[0][0], proj[0][1], proj[0][2], proj[0][3]);
 		println!("{}, {}, {}, {}", proj[1][0], proj[1][1], proj[1][2], proj[1][3]);
 		println!("{}, {}, {}, {}", proj[2][0], proj[2][1], proj[2][2], proj[2][3]);
 		println!("{}, {}, {}, {}", proj[3][0], proj[3][1], proj[3][2], proj[3][3]);
+		// https://harry7557558.github.io/tools/matrixv.html#m=0.7,0,0,0;0,1.4,0,0;0,0,-1.4,-1;0,0,-4.2,1&g=cube&s=1&tf=0
+		println!("https://harry7557558.github.io/tools/matrixv.html#m={},{},{},{};{},{},{},{};{},{},{},{};{},{},{},{}&g=cube&s=1&tf=0",
+			proj[0][0], proj[0][1], proj[0][2], proj[0][3],
+			proj[1][0], proj[1][1], proj[1][2], proj[1][3],
+			proj[2][0], proj[2][1], proj[2][2], proj[2][3],
+			proj[3][0], proj[3][1], proj[3][2], proj[3][3]
+		);
 	}
 }

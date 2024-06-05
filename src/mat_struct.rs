@@ -241,7 +241,7 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 }
 
 impl<const M: usize, K: Mathable> Matrix<M, M, K> {
-	fn identity() -> Self {
+	pub fn identity() -> Self {
 		let mut res = Self::new();
 		for i in 0..M {
 			res[i][i] = K::one();
@@ -249,7 +249,7 @@ impl<const M: usize, K: Mathable> Matrix<M, M, K> {
 		res
 	}
 
-	fn trace(&self) -> K {
+	pub fn trace(&self) -> K {
 		let mut res = self[0][0];
 		for i in 1..M {
 			res += self[i][i];
@@ -356,7 +356,6 @@ impl<K: Mathable> Determinant<3, K> for Matrix<3, 3, K> {
 }
 
 // Brainless hard-coded thing. TODO: stop plagiarizing Unreal Engine
-// Maybe make an N-sized implementation to flex, if that's not too hard?
 impl<K: Mathable> Determinant<4, K> for Matrix<4, 4, K> {
 	fn det(&self) -> K {
 		let temp0 = self[2][2] * self[3][3] - self[2][3] * self[3][2];
