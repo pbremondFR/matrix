@@ -144,16 +144,16 @@ impl<const M: usize, const N: usize, K: Mathable> Matrix<M, N, K> {
 			start_idx
 		};
 
-		let find_max_pivot = |col: &[K], start_idx: usize| -> usize {
-			let (mut max_val, mut max_idx) = (K::zero(), start_idx);
-			for (idx, val) in col.iter().enumerate().skip(start_idx) {
-				if val.abs() > max_val {
-					max_val = *val;
-					max_idx = idx;
-				}
-			}
-			max_idx
-		};
+		// let find_max_pivot = |col: &[K], start_idx: usize| -> usize {
+		// 	let (mut max_val, mut max_idx) = (K::zero(), start_idx);
+		// 	for (idx, val) in col.iter().enumerate().skip(start_idx) {
+		// 		if val.abs() > max_val {
+		// 			max_val = *val;
+		// 			max_idx = idx;
+		// 		}
+		// 	}
+		// 	max_idx
+		// };
 
 		let mut res = self.clone();
 		let mut i: usize = 0;

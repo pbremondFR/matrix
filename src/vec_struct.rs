@@ -66,10 +66,20 @@ impl<const N: usize, K: Mathable> Vector<N, K> {
 		&self.data
 	}
 }
-impl<const N: usize, K> Norm<K> for Vector<N, K>
-where K: Mathable + RealNumber
+
+pub trait Norm<T>
+where
+	T: Mathable + RealNumber
 {
-	default fn norm_1(self) -> K {
+	fn norm_1(self) -> T;
+	fn norm(self) -> T where T: Mathable<RealNumType = T>;
+	fn norm_inf(self) -> T;
+}
+
+impl<const N: usize, K> Norm<K::RealNumType> for Vector<N, K>
+where K: Mathable
+{
+	default fn norm_1(self) -> K::RealNumType {
 		// Would have been nice but don't want to implement whatever trait this is for K
 		// self.data.into_iter().map(|x| x.abs()).sum()
 		let mut res = self[0].abs();
@@ -79,11 +89,11 @@ where K: Mathable + RealNumber
 		res
 	}
 
-	default fn norm(self) -> K {
-		self.dot(&self).sqrt()
+	default fn norm(self) -> K::RealNumType {
+		self.dot(&self).sqrt_real()
 	}
 
-	default fn norm_inf(self) -> K {
+	default fn norm_inf(self) -> K::RealNumType {
 		let mut res = self[0].abs();
 		for i in 1..N {
 			res = res.max(self[i].abs());
@@ -113,7 +123,7 @@ pub trait AngleCos<T> {
 }
 
 impl<const N: usize, T> AngleCos<T> for Vector<N, T>
-where T: Mathable + RealNumber
+where T: Mathable<RealNumType = T> + RealNumber
 {
 	fn angle_cos(self, v: &Self) -> T {
 		self.dot(v) / (self.norm() * v.norm())
@@ -302,8 +312,7 @@ impl<const N: usize, K: Mathable + fmt::Display> fmt::Display for Vector<N, K> {
 #[cfg(test)]
 mod tests {
 	use crate::macros::assert_approx_eq;
-
-use super::*;
+	use super::*;
 
 	#[test]
 	fn vec_f64() {
@@ -313,6 +322,11 @@ use super::*;
 	#[test]
 	fn test_add() {
 		assert!(Vec2::from([1., 1.]) + Vec2::from([-1., -1.]) == Vec2::from([0., 0.]))
+	}
+
+	#[test]
+	fn test_add_complex() {
+		let u = Vector::<2, num::Complex<f32>>::new();
 	}
 
 	#[test]
@@ -374,6 +388,8 @@ use super::*;
 	#[test]
 	fn test_norm() {
 		assert_eq!(vector!(0., 1.).norm(), 1.);
+		let foo = vector!(42., 42.);
+		let foo = foo.norm();
 		assert_approx_eq!(vector!(42., 42.).norm(), 59.39696961966999, 0.00000000000001);
 
 		let u = vector!(0.0, 0.0, 0.0);

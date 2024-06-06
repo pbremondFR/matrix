@@ -2,16 +2,20 @@ use num_traits::*;
 use std::ops::{Add, Mul, MulAssign, Sub};
 use crate::{Matrix, Vector};
 
-pub trait Mathable: Copy + Signed + NumAssignOps + Default {
+pub trait Mathable: Copy + Sized + Num + std::ops::Neg<Output = Self> + NumAssignOps + Default {
+	type RealNumType: Mathable + RealNumber;
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		(self * a) + b
 	}
-	fn abs(self) -> Self;
+	fn abs(self) -> Self::RealNumType;
 	fn max(self, other: Self) -> Self;
 	fn sqrt(self) -> Self;	// Don't bother implementing it for complex numbers!
+	fn sqrt_real(self) -> Self::RealNumType; // For complex numbers, only returns real part of sqrt
 }
 
 impl Mathable for f32 {
+	type RealNumType = f32;
+
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		// Holy shit performance from this is LITERALLY 100 times worse. Just let the
 		// compiler call the fused multiply-accumulate for you.
@@ -27,9 +31,14 @@ impl Mathable for f32 {
 	fn sqrt(self) -> Self {
 		self.powf(0.5)	// For some reason, I'm allowed to use pow but not sqrt?!
 	}
+	fn sqrt_real(self) -> Self::RealNumType {
+		self.powf(0.5)
+	}
 }
 
 impl Mathable for f64 {
+	type RealNumType = f64;
+
 	fn mul_add(self, a: Self, b: Self) -> Self {
 		self.mul_add(a, b)
 	}
@@ -41,6 +50,26 @@ impl Mathable for f64 {
 	}
 	fn sqrt(self) -> Self {
 		self.powf(0.5)	// For some reason, I'm allowed to use pow but not sqrt?!
+	}
+	fn sqrt_real(self) -> Self::RealNumType {
+		self.powf(0.5)
+	}
+}
+
+impl Mathable for num::Complex<f32> {
+	type RealNumType = f32;
+
+	fn abs(self) -> Self::RealNumType {
+		num::complex::ComplexFloat::abs(self)
+	}
+	fn max(self, other: Self) -> Self {
+		if self.norm() > other.norm() { self } else { other }
+	}
+	fn sqrt(self) -> Self {
+		self.sqrt()
+	}
+	fn sqrt_real(self) -> Self::RealNumType {
+		self.sqrt().re
 	}
 }
 
@@ -81,20 +110,10 @@ where
 	// Default impl
 }
 
-pub trait Norm<T>
-where
-	T: Mathable
-{
-	fn norm_1(self) -> T;
-	fn norm(self) -> T;
-	fn norm_inf(self) -> T;
-}
-
 #[cfg(test)]
 mod tests {
-	use crate::{macros::assert_approx_eq, vector};
-
-use super::*;
+	use crate::{macros::assert_approx_eq, vector, vec_struct::*};
+	use super::*;
 
 	#[test]
 	fn test_lerp_f32() {
