@@ -37,6 +37,7 @@ pub fn cross_product<K: Mathable>(u: &Vector<3, K>, v: &Vector<3, K>) -> Vector<
 	])
 }
 
+// https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/opengl-perspective-projection-matrix.html
 pub fn projection(fov: f32, ratio: f32, near: f32, far: f32) -> Matrix::<4, 4, f32> {
 	const DEG_TO_RAD: f32 = std::f32::consts::PI / 180.0;
 
